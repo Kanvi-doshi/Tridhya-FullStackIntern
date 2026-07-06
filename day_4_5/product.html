@@ -1,3 +1,5 @@
+<!-- product filtering app with counter and cache implementation[ task_4,5] -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +16,7 @@
       <div class="icon"></div>
       <h2>ProductFilter</h2>
     </div>
-    <div class="count">0 product</div>
+    <div class="count">Total Products: <span id="Count">0</span></div>
   </header>
 
   <main class="container">
@@ -48,6 +50,7 @@
         </div>
 
         <button class="btn">+ Add Product</button>
+        <button class="btn clear-btn">Clear All</button>
       </div>
     </section>
 
@@ -65,8 +68,8 @@
 
         <select>
           <option>All Prices</option>
-          <option>100- 1000</option>
-          <option>1000 - 5000</option>
+          <option>100-1000</option>
+          <option>1000-5000</option>
           <option>5000+</option>
         </select>
         <select>
