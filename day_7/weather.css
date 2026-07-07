@@ -1,0 +1,145 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body{
+    background: #eaf4ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container{
+    width: 100%;
+    max-width: 550px;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+h1{
+    text-align: center;
+    margin-bottom: 25px;
+    color: #2563eb;
+}
+
+.search-box{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+#cityInput{
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+}
+
+#cityInput:focus{
+    border-color: #2563eb;
+}
+
+#searchBtn{
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#searchBtn:hover{
+    background: #1d4ed8;
+}
+
+.weather-card{
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+.main-weather{
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+#cityName{
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+#description{
+    font-size: 18px;
+    color: #6b7280;
+    margin-bottom: 15px;
+}
+
+#temperature{
+    font-size: 50px;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.weather-details{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 15px;
+}
+
+.card{
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+.card h3{
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.card p{
+    font-size: 22px;
+    font-weight: bold;
+    color: #2563eb;
+}
+.history{
+    margin-top: 20px;
+}
+.history h2{
+    margin-bottom: 15px;
+}
+
+#historyList{
+    list-style: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#historyList li{
+    list-style: none;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,.08);
+    transition: 0.3s;
+}
+
+#historyList li:hover{
+    transform: translateY(-2px);
+    background: #dbeafe;
+}
