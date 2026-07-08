@@ -1,296 +1,290 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calculator</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
 
-        body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #1f1f1f;
-        }
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #1f1f1f;
+      }
 
-        .calculator {
-            background: #2f2f2f;
-            padding: 20px;
-            border-radius: 12px;
-            width: 340px;
-        }
+      .calculator {
+        background: #2f2f2f;
+        padding: 20px;
+        border-radius: 12px;
+        width: 340px;
+      }
 
-        #display {
-            width: 100%;
-            height: 60px;
-            border: none;
-            outline: none;
-            border-radius: 8px;
-            font-size: 28px;
-            text-align: right;
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4,1fr);
-            gap: 10px;
-        }
-        button {
-            height: 60px;
-            border: none;
-            border-radius: 8px;
-            background: #555;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #6d6d6d;
-        }
-        .equal {
-            background: green;
-        }
+      #display {
+        width: 100%;
+        height: 60px;
+        border: none;
+        outline: none;
+        border-radius: 8px;
+        font-size: 28px;
+        text-align: right;
+        padding: 10px;
+        margin-bottom: 15px;
+      }
+      .buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      button {
+        height: 60px;
+        border: none;
+        border-radius: 8px;
+        background: #555;
+        color: white;
+        font-size: 22px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #6d6d6d;
+      }
+      .equal {
+        background: green;
+      }
 
-        .equal:hover {
-            background: darkgreen;
-        }
+      .equal:hover {
+        background: darkgreen;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="calculator">
+      <input type="text" id="display" readonly />
 
-<div class="calculator">
-
-    <input type="text" id="display" readonly>
-
-    <div class="buttons">
+      <div class="buttons">
         <button onclick="clearDisplay()">C</button>
         <button onclick="deleteLast()">⌫</button>
         <button onclick="add('+')">+</button>
         <button onclick="add('/')">/</button>
-    
+
         <button onclick="add('7')">7</button>
         <button onclick="add('8')">8</button>
         <button onclick="add('9')">9</button>
         <button onclick="add('*')">*</button>
-        
+
         <button onclick="add('4')">4</button>
         <button onclick="add('5')">5</button>
         <button onclick="add('6')">6</button>
         <button onclick="add('-')">-</button>
-        
+
         <button onclick="add('1')">1</button>
         <button onclick="add('2')">2</button>
         <button onclick="add('3')">3</button>
-        
+
         <button onclick="add('%')">%</button>
         <button onclick="add('0')">0</button>
         <button onclick="add('.')">.</button>
         <button onclick="addBracket()">( )</button>
         <button class="equal" onclick="answer()">=</button>
+      </div>
     </div>
-</div>
 
-<script>
-let display = document.getElementById("display");
+    <script>
+      let display = document.getElementById("display");
 
-const operators = "+-*/%";
-const operatorWithBracket = "+-*/%(";
+      const operators = "+-*/%";
+      const operatorWithBracket = "+-*/%(";
 
-function bracketCount(text) {
-    return {
-        open: (text.match(/\(/g) || []).length,
-        close: (text.match(/\)/g) || []).length
-    };
-}
+      function bracketCount(text) {
+        return {
+          open: (text.match(/\(/g) || []).length,
+          close: (text.match(/\)/g) || []).length,
+        };
+      }
 
-function solve(values, operatorsStack) {
-    let b = values.pop();
-    let a = values.pop();
-    let op = operatorsStack.pop();
+      function solve(values, operatorsStack) {
+        let b = values.pop();
+        let a = values.pop();
+        let op = operatorsStack.pop();
 
-    values.push(operation(a, b, op));
-}
+        values.push(operation(a, b, op));
+      }
 
-function add(value) {
-    let text = display.value;
-    let last = text[text.length - 1];
+      function add(value) {
+        let text = display.value;
+        let last = text[text.length - 1];
 
-    if (text == "") {
-
-        if ("+*/%)".includes(value))
-            return;
-        if (value == ".") {
+        if (text == "") {
+          if ("+*/%)".includes(value)) return;
+          if (value == ".") {
             display.value = "0.";
             return;
+          }
+          display.value += value;
+          return;
         }
-        display.value += value;
-        return;
-    }
 
-    if (value == ".") {
-        if (operatorWithBracket.includes(last)) {
+        if (value == ".") {
+          if (operatorWithBracket.includes(last)) {
             display.value += "0.";
             return;
+          }
+          let current = text.split(/[+\-*/()%]/).pop();
+          if (current.includes(".")) return;
         }
-        let current = text.split(/[+\-*/()%]/).pop();
-        if (current.includes("."))
-            return;
-    }
 
-    if (operators.includes(value)) {
-        if (value == "-" && (operatorWithBracket.includes(last))) {
+        if (operators.includes(value)) {
+          if (value == "-" && operatorWithBracket.includes(last)) {
             display.value += value;
             return;
+          }
+          if (operators.includes(last)) {
+            display.value = text.slice(0, -1) + value;
+            return;
+          }
         }
-        if (operators.includes(last)) {
-            display.value =
-                text.slice(0, -1) + value;
-            return;
+
+        if (value == ")") {
+          let { open, close } = bracketCount(text);
+          if (open <= close) return;
+          if (operatorWithBracket.includes(last)) return;
         }
-    }
+        if (!isNaN(value) && last == ")") return;
 
-    if (value == ")") {
-        let {open , close} =bracketCount(text);
-        if (open <= close)
-            return;
-        if (operatorWithBracket.includes(last))
-            return;
-    }
-    if (!isNaN(value) && last == ")")
-        return;
+        display.value += value;
+      }
 
-    display.value += value;
-}
+      function addBracket() {
+        let text = display.value;
+        let { open, close } = bracketCount(text);
+        if (open == close) {
+          display.value += "(";
+        } else {
+          display.value += ")";
+        }
+      }
 
-function addBracket() {
+      function clearDisplay() {
+        display.value = "";
+      }
 
-    let text = display.value;
-    let {open , close} =bracketCount(text);
-    if (open == close) {
-        display.value += "(";
-    } else {
-        display.value += ")";
-    }
-}
+      function deleteLast() {
+        display.value = display.value.slice(0, -1);
+      }
 
-function clearDisplay() {
-    display.value = "";
-}
-
-function deleteLast() {
-    display.value = display.value.slice(0, -1);
-}
-
-function answer() {
-    if (display.value == "") return;
-    try {
+      function answer() {
+        if (display.value == "") return;
+        try {
           display.value = calculate(display.value);
-    } catch {
-        display.value = "Error";
-    }
-}
+        } catch {
+          display.value = "Error";
+        }
+      }
 
-function calculate(exp) {
+      function calculate(exp) {
+        let values = [];
+        let operatorsStack = [];
+        let i = 0;
 
-    let values = [];
-    let operatorsStack = [];
-    let i = 0;
+        while (i < exp.length) {
+          let ch = exp[i];
 
-    while (i < exp.length) {
-        let ch = exp[i];
-
-        if (ch == " ") {
+          if (ch == " ") {
             i++;
             continue;
-        }
+          }
 
-        if (ch == "(") {
+          if (ch == "(") {
             operatorsStack.push(ch);
             i++;
-        }
-
-        else if (!isNaN(ch) || ch == "." ||
-            (ch == "-" && (i == 0 || exp[i - 1] == "(" || operators.includes(exp[i - 1])))) {
-
+          } else if (
+            !isNaN(ch) ||
+            ch == "." ||
+            (ch == "-" &&
+              (i == 0 || exp[i - 1] == "(" || operators.includes(exp[i - 1])))
+          ) {
             let num = "";
             if (ch == "-") {
-                num += "-";
-                i++;
+              num += "-";
+              i++;
             }
             while (i < exp.length && (!isNaN(exp[i]) || exp[i] == ".")) {
-                num += exp[i];
-                i++;
+              num += exp[i];
+              i++;
             }
 
             values.push(parseFloat(num));
-        }
-
-        else if (ch == ")") {
-            while (operatorsStack.length && operatorsStack[operatorsStack.length - 1] != "(") {
-                 solve(values, operatorsStack);
+          } else if (ch == ")") {
+            while (
+              operatorsStack.length &&
+              operatorsStack[operatorsStack.length - 1] != "("
+            ) {
+              solve(values, operatorsStack);
             }
             operatorsStack.pop();
             i++;
-        }
-        else {
+          } else {
             while (
-                operatorsStack.length &&
-                priority(operatorsStack[operatorsStack.length - 1]) >= priority(ch)) {
-                solve(values, operatorsStack);
+              operatorsStack.length &&
+              priority(operatorsStack[operatorsStack.length - 1]) >=
+                priority(ch)
+            ) {
+              solve(values, operatorsStack);
             }
             operatorsStack.push(ch);
             i++;
+          }
         }
-    }
 
-    while (operatorsStack.length) {
-        solve(values, operatorsStack);
-    }
-    return parseFloat(values[0].toFixed(10));
-}
+        while (operatorsStack.length) {
+          solve(values, operatorsStack);
+        }
+        return parseFloat(values[0].toFixed(10));
+      }
 
-function priority(op) {
-    if (op == "+" || op == "-")
-        return 1;
-    if (op == "*" || op == "/" || op == "%")
-        return 2;
-    return 0;
-}
+      function priority(op) {
+        if (op == "+" || op == "-") return 1;
+        if (op == "*" || op == "/" || op == "%") return 2;
+        return 0;
+      }
 
-function operation(a, b, op) {
-    switch(op) {
-        case "+": return a + b;
-        case "-": return a - b;
-        case "*": return a * b;
-        case "/": return a / b;
-        case "%": return a % b;
-    }
-}
+      function operation(a, b, op) {
+        switch (op) {
+          case "+":
+            return a + b;
+          case "-":
+            return a - b;
+          case "*":
+            return a * b;
+          case "/":
+            return a / b;
+          case "%":
+            return a % b;
+        }
+      }
 
-document.addEventListener("keydown", function(e){
-    if (!isNaN(e.key) || "+-*/.%()".includes(e.key)) {
-        add(e.key);
-    }
-    if (e.key == "Enter") {
-        e.preventDefault();
-        answer();
-    }
-    if (e.key == "Backspace") {
-        deleteLast();
-    }
-    if (e.key == "Escape") {
-        clearDisplay();
-    }
-});
-
-</script>
-</body>
+      document.addEventListener("keydown", function (e) {
+        if (!isNaN(e.key) || "+-*/.%()".includes(e.key)) {
+          add(e.key);
+        }
+        if (e.key == "Enter") {
+          e.preventDefault();
+          answer();
+        }
+        if (e.key == "Backspace") {
+          deleteLast();
+        }
+        if (e.key == "Escape") {
+          clearDisplay();
+        }
+      });
+    </script>
+  </body>
 </html>

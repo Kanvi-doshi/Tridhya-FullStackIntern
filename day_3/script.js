@@ -26,7 +26,11 @@ const elements = {
 const getFormData = () =>
   Object.entries(elements.inputs).reduce(
     (data, [key, input]) => ({
-      ...data,[key]: input.value.trim(),}),{} );
+      ...data,
+      [key]: input.value.trim(),
+    }),
+    {},
+  );
 
 const resetForm = () => {
   form.reset();
@@ -53,17 +57,19 @@ const isFormValid = (student) => {
 };
 
 const addStudent = (student) => {
-    students.push({id: Date.now(), ...student,});
+  students.push({ id: Date.now(), ...student });
 };
 
 const updateStudent = (updatedStudent) => {
   students = students.map((student) =>
-    student.id === editId ? { ...student, ...updatedStudent } : student
+    student.id === editId ? { ...student, ...updatedStudent } : student,
   );
 };
 
 const deleteStudent = (id) => {
-  const confirmDelete = confirm("Are you sure you want to delete this student?");
+  const confirmDelete = confirm(
+    "Are you sure you want to delete this student?",
+  );
   if (!confirmDelete) return;
   students = students.filter((student) => student.id !== id);
   renderStudents();
@@ -90,24 +96,34 @@ const editStudent = (id) => {
 const getFilteredStudents = () => {
   const searchText = search.value.toLowerCase();
   const selectedStandard = standardFilter.value;
-  const selectedGrade =gradeFilter.value;
+  const selectedGrade = gradeFilter.value;
 
   return students
     .filter(({ name, standard, grade }) => {
       const matchesName = name.toLowerCase().includes(searchText);
-      const matchesStandard = !selectedStandard || standard === selectedStandard;
+      const matchesStandard =
+        !selectedStandard || standard === selectedStandard;
       const matchesGrade = !selectedGrade || grade === selectedGrade;
 
       return matchesName && matchesStandard && matchesGrade;
     })
     .sort((first, second) => {
-      const standardDifference = Number(first.standard) - Number(second.standard);
+      const standardDifference =
+        Number(first.standard) - Number(second.standard);
 
       return standardDifference || first.name.localeCompare(second.name);
     });
 };
 
-const getStudentRow = ({id, name,age,standard,gender,birthDate,grade,}) => `
+const getStudentRow = ({
+  id,
+  name,
+  age,
+  standard,
+  gender,
+  birthDate,
+  grade,
+}) => `
   <tr>
     <td>${name}</td>
     <td>${age}</td>
@@ -136,11 +152,11 @@ const renderStudents = () => {
             <td colspan="7">No students found</td>
         </tr>
     `;
-} else {
+  } else {
     table.innerHTML = filteredStudents.map(getStudentRow).join("");
-}
-studentCount.textContent = students.length;
-}
+  }
+  studentCount.textContent = students.length;
+};
 
 const handleFormSubmit = (event) => {
   event.preventDefault();
@@ -171,8 +187,8 @@ form.addEventListener("submit", handleFormSubmit);
 table.addEventListener("click", handleTableClick);
 modal.addEventListener("click", closeModalOnOutsideClick);
 
-[search, standardFilter, gradeFilter].forEach(
-  (element) => element.addEventListener("input", renderStudents)
+[search, standardFilter, gradeFilter].forEach((element) =>
+  element.addEventListener("input", renderStudents),
 );
 
 renderStudents();

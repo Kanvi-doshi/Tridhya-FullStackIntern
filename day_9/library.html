@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Management</title>
+    <link rel="stylesheet" href="library.css" />
+  </head>
+  <body>
+    <header class="navbar">
+      <h1>Library Management</h1>
+    </header>
+
+    <main class="container">
+      <!-- Dashboard -->
+      <section class="dashboard">
+        <div class="card">
+          <h3>Total Books</h3>
+          <p id="totalBooks">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Available Copies</h3>
+          <p id="availableBooks">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Borrowed Copies</h3>
+          <p id="borrowedBooks">0</p>
+        </div>
+      </section>
+
+      <!-- Form -->
+      <section class="form-section">
+        <h2>Add Book</h2>
+
+        <form id="bookForm">
+          <input type="text" id="title" placeholder="Book Title" required />
+          <input type="text" id="author" placeholder="Author" required />
+          <input type="text" id="category" placeholder="Category" required />
+          <input
+            type="number"
+            id="copies"
+            placeholder="Total Copies"
+            min="1"
+            required
+          />
+          <button type="submit" id="saveBtn">Add Book</button>
+        </form>
+      </section>
+
+      <!-- Search -->
+      <section class="controls">
+        <input type="text" id="search" placeholder="Search by title..." />
+
+        <select id="filterStatus">
+          <option value="All">All Books</option>
+          <option value="Available">Available Copies</option>
+          <option value="Out">OUt of Stock</option>
+        </select>
+      </section>
+
+      <!-- Books -->
+      <section class="table-section">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Category</th>
+              <th>copies</th>
+              <th>Borrow</th>
+              <th>Return</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="bookTable"></tbody>
+        </table>
+      </section>
+
+      <!-- History -->
+      <section class="history">
+        <div class="history-tabs">
+          <button id="historyTab" class="active">History</button>
+
+          <button id="studentsTab">Students</button>
+        </div>
+        <div id="historySection">
+          <table>
+            <thead>
+              <tr>
+                <th>Book</th>
+                <th>Action</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+
+            <tbody id="historyTable"></tbody>
+          </table>
+        </div>
+
+        <div id="studentsSection" class="hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Books Borrowed</th>
+                <th>View</th>
+              </tr>
+            </thead>
+
+            <tbody id="studentTable"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <div id="studentModal" class="modal">
+      <div class="modal-content">
+        <span id="closeModal" type="button">&times;</span>
+
+        <h2 id="studentName"></h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Book</th>
+              <th>Borrowed At</th>
+              <th>Returned At</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="studentHistory"></tbody>
+        </table>
+      </div>
+    </div>
+    <script src="classes.js"></script>
+  </body>
+</html>

@@ -1,159 +1,143 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Management System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div class="container">
+      <header>
+        <h1>Student Management System</h1>
+        <p>Manage Student Records</p>
+      </header>
 
-        <header>
-            <h1>Student Management System</h1>
-            <p>Manage Student Records</p>
-        </header>
+      <section class="dashboard">
+        <div class="card">
+          <h3>Total Students</h3>
+          <h2 id="studentCount">0</h2>
+        </div>
+        <div class="actions">
+          <input type="text" id="search" placeholder="Search by Name..." />
+          <select id="standardFilter">
+            <option value="">All Standards</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+            <option>7</option>
+            <option>8</option>
+            <option>9</option>
+            <option>10</option>
+            <option>11</option>
+            <option>12</option>
+          </select>
 
-        <section class="dashboard">
-            <div class="card">
-                <h3>Total Students</h3>
-                <h2 id="studentCount">0</h2>
-            </div>
-            <div class="actions">
-                <input
-                    type="text"
-                    id="search"
-                    placeholder="Search by Name...">
-                <select id="standardFilter">
-                    <option value="">All Standards</option>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                    <option>6</option>
-                    <option>7</option>
-                    <option>8</option>
-                    <option>9</option>
-                    <option>10</option>
-                    <option>11</option>
-                    <option>12</option>
-                </select>
+          <select id="gradeFilter">
+            <option value="">All Grades</option>
+            <option>A+</option>
+            <option>A</option>
+            <option>B+</option>
+            <option>B</option>
+            <option>C</option>
+            <option>D</option>
+          </select>
 
-                <select id="gradeFilter">
-                    <option value="">All Grades</option>
-                    <option>A+</option>
-                    <option>A</option>
-                    <option>B+</option>
-                    <option>B</option>
-                    <option>C</option>
-                    <option>D</option>
-                </select>
+          <button id="openModal">+ Add Student</button>
+        </div>
+      </section>
 
-                <button id="openModal">+ Add Student</button>
-            </div>
-        </section>
-
-        <section class="table-section">
-            <h2>Student Records</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Standard</th>
-                        <th>Gender</th>
-                        <th>Birth Date</th>
-                        <th>Grade</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="studentTable"> </tbody>
-            </table>
-        </section>
+      <section class="table-section">
+        <h2>Student Records</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Standard</th>
+              <th>Gender</th>
+              <th>Birth Date</th>
+              <th>Grade</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTable"></tbody>
+        </table>
+      </section>
     </div>
 
     <div class="modal" id="studentModal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Add Student</h2>
-            <form id="studentForm">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input
-                        type="text"
-                        id="name">
-                </div>
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add Student</h2>
+        <form id="studentForm">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="name" />
+          </div>
 
-                <div class="form-group">
-                    <label>Age</label>
-                    <input
-                        type="number"
-                        id="age"
-                        min="1"
-                        max="19"
-                    >
-                </div>
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" id="age" min="1" max="19" />
+          </div>
 
-                <div class="form-group">
-                    <label>Standard</label>
-                    <select id="standard">
-                        <option value="">Select</option>
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                        <option>4</option>
-                        <option>5</option>
-                        <option>6</option>
-                        <option>7</option>
-                        <option>8</option>
-                        <option>9</option>
-                        <option>10</option>
-                        <option>11</option>
-                        <option>12</option>
-                    </select>
-                </div>
+          <div class="form-group">
+            <label>Standard</label>
+            <select id="standard">
+              <option value="">Select</option>
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>6</option>
+              <option>7</option>
+              <option>8</option>
+              <option>9</option>
+              <option>10</option>
+              <option>11</option>
+              <option>12</option>
+            </select>
+          </div>
 
-                <div class="form-group">
-                    <label>Gender</label>
-                    <select id="gender">
-                        <option value="">Select</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                    </select>
-                </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="gender">
+              <option value="">Select</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
 
-                <div class="form-group">
-                    <label>Birth Date</label>
-                    <input
-                        type="date"
-                        id="birthDate"
-                    >
-                </div>
+          <div class="form-group">
+            <label>Birth Date</label>
+            <input type="date" id="birthDate" />
+          </div>
 
-                <div class="form-group">
-                    <label>Previous Exam Grade</label>
-                    <select id="grade">
-                        <option value="">Select</option>
-                        <option>A+</option>
-                        <option>A</option>
-                        <option>B+</option>
-                        <option>B</option>
-                        <option>C</option>
-                        <option>D</option>
-                    </select>
-                </div>
-                <button id="saveBtn">Save Student </button>
-
-            </form>
-
-        </div>
-
+          <div class="form-group">
+            <label>Previous Exam Grade</label>
+            <select id="grade">
+              <option value="">Select</option>
+              <option>A+</option>
+              <option>A</option>
+              <option>B+</option>
+              <option>B</option>
+              <option>C</option>
+              <option>D</option>
+            </select>
+          </div>
+          <button id="saveBtn">Save Student</button>
+        </form>
+      </div>
     </div>
 
     <script src="script.js"></script>
-
-</body>
+  </body>
 </html>

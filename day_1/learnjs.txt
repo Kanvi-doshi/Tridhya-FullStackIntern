@@ -1,9 +1,0 @@
-variable - is a container that stores a value
-
-var a = 11 -->literal
-a = indentifier
-let a = 11 ==> declaring variable
-
-            var vs let
-var is globally scoped               -- let is blocked scoped
-var can be re-declared, updated[scope]     -- let can't but can be updated 

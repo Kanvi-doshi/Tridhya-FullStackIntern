@@ -1,109 +1,109 @@
 <!-- product filtering app with counter and cache implementation[ task_4,5] -->
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Product Filter</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <link rel="stylesheet" href="product.css"/>
-</head>
-<body>
-
-  <header class="navbar">
-    <div class="logo">
-      <div class="icon"></div>
-      <h2>ProductFilter</h2>
-    </div>
-    <div class="count">Total Products: <span id="Count">0</span></div>
-  </header>
-
-  <main class="container">
-
-    <!-- ADD PRODUCT -->
-    <section class="card">
-      <div class="section-title">
-        <span></span>
-        <h3>Add New Product</h3>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Filter</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="product.css" />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">
+        <div class="icon"></div>
+        <h2>ProductFilter</h2>
       </div>
+      <div class="count">Total Products: <span id="Count">0</span></div>
+    </header>
 
-      <div class="form-grid">
-        <div class="field">
-          <label>PRODUCT NAME</label>
-          <input type="text" placeholder="e.g. Headphones"/>
+    <main class="container">
+      <!-- ADD PRODUCT -->
+      <section class="card">
+        <div class="section-title">
+          <span></span>
+          <h3>Add New Product</h3>
         </div>
 
-        <div class="field">
-          <label>CATEGORY</label>
+        <div class="form-grid">
+          <div class="field">
+            <label>PRODUCT NAME</label>
+            <input type="text" placeholder="e.g. Headphones" />
+          </div>
+
+          <div class="field">
+            <label>CATEGORY</label>
+            <select>
+              <option>-- Select --</option>
+              <option>Electronics</option>
+              <option>Clothing</option>
+              <option>Footwear</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>PRICE (Rs)</label>
+            <input type="number" placeholder="0.00" min="0" />
+          </div>
+
+          <button class="btn">+ Add Product</button>
+          <button class="btn clear-btn">Clear All</button>
+        </div>
+      </section>
+
+      <!-- FILTER -->
+      <section class="card">
+        <div class="section-title">
+          <span></span>
+          <h3>Filter & Sort</h3>
+        </div>
+
+        <div class="filters">
+          <div class="search">
+            <input type="text" placeholder="Search by product name..." />
+          </div>
+
           <select>
-            <option>-- Select --</option>
-            <option>Electronics</option>
-            <option>Clothing</option>
-            <option>Footwear</option>
+            <option>All Prices</option>
+            <option>100-1000</option>
+            <option>1000-5000</option>
+            <option>5000+</option>
+          </select>
+          <select>
+            <option>Category</option>
+            <option>clothing</option>
+            <option>footwear</option>
+            <option>electronics</option>
           </select>
         </div>
+      </section>
 
-        <div class="field">
-          <label>PRICE (Rs)</label>
-          <input type="number" placeholder="0.00" min="0"/>
+      <section class="card">
+        <div class="section-title">
+          <span></span>
+          <h3>Product List</h3>
         </div>
-
-        <button class="btn">+ Add Product</button>
-        <button class="btn clear-btn">Clear All</button>
-      </div>
-    </section>
-
-    <!-- FILTER -->
-    <section class="card">
-      <div class="section-title">
-        <span></span>
-        <h3>Filter & Sort</h3>
-      </div>
-
-      <div class="filters">
-        <div class="search">
-          <input type="text" placeholder="Search by product name..."/>
-        </div>
-
-        <select>
-          <option>All Prices</option>
-          <option>100-1000</option>
-          <option>1000-5000</option>
-          <option>5000+</option>
-        </select>
-        <select>
-          <option>Category</option>
-          <option>clothing</option>
-          <option>footwear</option>
-          <option>electronics</option>
-        </select>
-      </div>
-    </section>
-    
-    <section class="card">
-      <div class="section-title">
-        <span></span>
-        <h3>Product List</h3>
-      </div>
 
         <table class="product-table">
-        <thead>
+          <thead>
             <tr>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Price (Rs)</th>
-                <th>Actions</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Price (Rs)</th>
+              <th>Actions</th>
             </tr>
-        </thead>
+          </thead>
 
-        <tbody id="productTableBody">
+          <tbody id="productTableBody">
             <!-- Products will appear here -->
-        </tbody>
-    </table>
-    </section>
-
-  </main>
+          </tbody>
+        </table>
+      </section>
+    </main>
     <script src="product.js"></script>
-</body>
+  </body>
 </html>
