@@ -205,7 +205,7 @@
             operatorsStack.push(ch);
             i++;
           } else if (
-            !isNaN(ch) ||
+            /^\d$/.test(ch) ||
             ch == "." ||
             (ch == "-" &&
               (i == 0 || exp[i - 1] == "(" || operators.includes(exp[i - 1])))
@@ -215,7 +215,7 @@
               num += "-";
               i++;
             }
-            while (i < exp.length && (!isNaN(exp[i]) || exp[i] == ".")) {
+            while (i < exp.length && (/^\d$/.test(exp[i]) || exp[i] == ".")) {
               num += exp[i];
               i++;
             }
@@ -271,7 +271,7 @@
       }
 
       document.addEventListener("keydown", function (e) {
-        if (!isNaN(e.key) || "+-*/.%()".includes(e.key)) {
+        if (/^\d$/.test(e.key) || "+-*/.%()".includes(e.key)) {
           add(e.key);
         }
         if (e.key == "Enter") {
