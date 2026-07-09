@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        background: #444444;
+        color: white;
+        font:
+          sans-serif;
+        margin: 0 auto;
+        max-width: 600px;
+        padding: 20px;
+        min-height: 1000vh;
+      }
+      #counter {
+        position: fixed;
+        top: 100px;
+        left: 40%;
+        font-size: 50px;
+      }
+      .reset {
+        color: white;
+        text-decoration: none;
+        border: 1px solid white;
+        padding: 10px 20px;
+        background: rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Number of scroll events</h1>
+    <a href="#" class="reset">Reset</a>
+    <div id="counter">0</div>
+    <script>
+      let i = 0;
+      const counter = document.getElementById("counter");
+      const reset = document.querySelector(".reset");
+      document.addEventListener("scroll", () => {
+        i++;
+        counter.textContent = i;
+      });
+      reset.addEventListener("click", (e) => {
+        e.preventDefault();
+        i = 0;
+        counter.textContent = i;
+      });
+    </script>
+  </body>
+</html>
