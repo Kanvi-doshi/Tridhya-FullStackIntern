@@ -174,9 +174,6 @@ function read<T>(arr: Readonly<T[]>): T | undefined {
   return arr[0];
 }
 
-
-
-
 let numbers = [10, 20, 30, 40, 50];
 
 console.log("Original:", numbers);
@@ -202,9 +199,28 @@ console.log("move:", numbers);
 numbers = remove(numbers, 40);
 console.log("remove:", numbers);
 
+console.log("remove first :-", removeFirst(numbers));
+console.log("Remove last", removeLast(numbers));
+
 console.log("contains 60:", contains(numbers, 60));
 console.log("count 20:", count(numbers, 20));
 console.log("first:", first(numbers));
 console.log("last:", last(numbers));
 
 console.log("readOnly:-", read(numbers));
+console.log("shuffleArray:", shuffleArray(numbers));
+console.log("chunkArray:", chunkArray(numbers, 3));
+
+console.log(
+  "removeUndefined:",
+  removeUndefined([10, undefined, 20, undefined, 30]),
+);
+
+console.log("removeNull:", removeNull([10, null, 20, null, 30]));
+
+console.log(
+  "removeFalsy:",
+  removeFalsy([10, 0, 20, false, 30, "", null, undefined]),
+);
+
+console.log("readOnly:", read(numbers));

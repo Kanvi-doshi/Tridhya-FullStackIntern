@@ -13,7 +13,7 @@ function rev(str: string): string {
   return str.split("").reverse().join("");
 }
 
-function truncate(str: string): string {
+function truncate(str: string, length: number): string {
   if (str.length <= length) {
     return str;
   }
@@ -27,7 +27,7 @@ function camelCase(str: string): string {
     .map((word, index) => {
       if (index == 0) {
       }
-      return word[0].toUpperCase + word.slice(1);
+      return word[0].toUpperCase() + word.slice(1);
     })
     .join("");
 }
