@@ -71,7 +71,7 @@ console.log("typeof guard", calculate(5));
 console.log("typeof guard", calculate("kanvi"));
 
 // mapped types
-interface User {
+interface User01 {
   id: number;
   name: string;
   age: number;
@@ -80,16 +80,16 @@ interface User {
 type Editable<T> = {
   [K in keyof T]?: T[K];
 };
-type UpdateUser = Editable<User>;
-const user: User = {
+type UpdateUser01 = Editable<User>;
+const user: User01 = {
   id: 1,
   name: "Kanvi",
   age: 22,
   email: "ka@gmail.com",
 };
 
-const updates: UpdateUser = { name: "Rahul" };
-function updateUser(user: User, updates: UpdateUser): User {
+const updates: UpdateUser01 = { name: "Rahul" };
+function updateUser(user: User01, updates: UpdateUser01): User01 {
   return { ...user, ...updates };
 }
 const updatedUser = updateUser(user, updates);
@@ -124,16 +124,16 @@ console.log("Conditional Type");
 console.log(user1);
 console.log(product1);
 
-// infer- automatically get the return type[u dont to rite type kids seperately ]
-function getUser() {
+// infer- automatically get the return type[u dont to write type kids seperately ]
+function getUser11() {
   return {
     id: 1,
     name: "Kanvi",
   };
 }
 type MyReturn<T> = T extends (...args: any[]) => infer R ? R : never;
-type kids = MyReturn<typeof getUser>;
-const student: kids = getUser();
+type kids = MyReturn<typeof getUser11>;
+const student: kids = getUser11();
 
 console.log("Infer");
 console.log(student);
