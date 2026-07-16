@@ -1,6 +1,6 @@
-function InputField({ type, name, placeholder, value, onChange, error }) {
+function InputField({ type, name, placeholder, value, onChange, error, children }) {
   return (
-    <div>
+    <div className="input-container">
       <input
         type={type}
         name={name}
@@ -8,7 +8,7 @@ function InputField({ type, name, placeholder, value, onChange, error }) {
         value={value}
         onChange={onChange}
       />
-
+      {children}
       {error && <p className="error">{error}</p>}
     </div>
   );

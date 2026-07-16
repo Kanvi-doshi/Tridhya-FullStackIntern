@@ -21,7 +21,7 @@ body {
   padding: 2rem;
   width: 400px;
   border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .form h1 {
@@ -62,4 +62,25 @@ body {
   color: green;
   text-align: center;
   margin-top: 15px;
+}
+
+.input-container {
+  position: relative;
+}
+
+.input-container input {
+  width: 100%;
+  padding-right: 60px;
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 37%;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 4px 10px !important;
+  color: #1877f2;
+  cursor: pointer;
+  font-size: 13px;
 }

@@ -12,17 +12,14 @@ function RegistrationForm() {
 
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleChange(e) {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-
     const validationErrors = validateForm(formData);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -30,6 +27,13 @@ function RegistrationForm() {
       setSuccess("");
     } else {
       setErrors({});
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      console.log(formData);
       setSuccess("Registration Successful");
     }
   }
@@ -57,13 +61,21 @@ function RegistrationForm() {
       />
 
       <InputField
-        type="password"
+        type={showPassword ? "text" : "password"}
         name="password"
         placeholder="Enter Password"
         value={formData.password}
         onChange={handleChange}
         error={errors.password}
-      />
+      >
+        <button
+          type="button"
+          className="toggle-btn"
+          onClick={() => setShowPassword(!showPassword)}
+        >
+          {showPassword ? "Hide" : "Show"}
+        </button>
+      </InputField>
 
       <InputField
         type="password"
@@ -75,7 +87,6 @@ function RegistrationForm() {
       />
 
       <button type="submit">Register</button>
-
       {success && <p className="success">{success}</p>}
     </form>
   );

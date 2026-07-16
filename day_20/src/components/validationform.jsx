@@ -21,8 +21,6 @@ function validateForm(formData) {
   }
 
   return errors;
-  console.log(formData.password);
-  console.log(passwordRegex.test(formData.password));
 }
 
 export default validateForm;
