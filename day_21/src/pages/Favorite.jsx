@@ -20,7 +20,7 @@ function Favorites({ favorites, setFavorites }) {
       {favorites.length === 0 ? (
         <p>No favorite movies added yet.</p>
       ) : (
-        <div className="movie-grid">
+        <div className="movies-grid">
           {favorites.map((movie) => (
             <div className="movie-card" key={movie.id}>
               <div className={`genre-tag ${movie.genre.toLowerCase()}`}>

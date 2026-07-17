@@ -5,6 +5,11 @@ const movies = [
     year: 2014,
     genre: "Sci-Fi",
     image: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+    rating: 8.7,
+    duration: "2h 49m",
+    director: "Christopher Nolan",
+    description:
+      "A team of astronauts travels through a wormhole to find a new home for humanity.",
   },
   {
     id: 2,
@@ -12,6 +17,11 @@ const movies = [
     year: 2010,
     genre: "Sci-Fi",
     image: "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+    rating: 8.8,
+    duration: "2h 28m",
+    director: "Christopher Nolan",
+    description:
+      "A thief who steals secrets through dreams is given a chance at redemption.",
   },
   {
     id: 3,
@@ -19,14 +29,23 @@ const movies = [
     year: 2019,
     genre: "Drama",
     image: "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+    rating: 8.4,
+    duration: "2h 2m",
+    director: "Todd Phillips",
+    description:
+      "A struggling comedian descends into madness and becomes Gotham's infamous villain.",
   },
-  ,
   {
     id: 4,
     title: "Avengers: Endgame",
     year: 2019,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+    rating: 8.4,
+    duration: "3h 1m",
+    director: "Anthony & Joe Russo",
+    description:
+      "The Avengers assemble for one final battle to reverse Thanos' actions.",
   },
   {
     id: 5,
@@ -34,6 +53,11 @@ const movies = [
     year: 2008,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    rating: 9.0,
+    duration: "2h 32m",
+    director: "Christopher Nolan",
+    description:
+      "Batman faces his greatest challenge when the Joker terrorizes Gotham City.",
   },
   {
     id: 6,
@@ -41,6 +65,11 @@ const movies = [
     year: 2021,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
+    rating: 8.2,
+    duration: "2h 28m",
+    director: "Jon Watts",
+    description:
+      "Peter Parker seeks help from Doctor Strange after his identity is revealed.",
   },
   {
     id: 7,
@@ -48,6 +77,11 @@ const movies = [
     year: 2016,
     genre: "Fantasy",
     image: "https://image.tmdb.org/t/p/w500/uGBVj3bEbCoZbDjjl9wTxcygko1.jpg",
+    rating: 7.5,
+    duration: "1h 55m",
+    director: "Scott Derrickson",
+    description:
+      "A brilliant surgeon discovers a hidden world of magic and alternate realities.",
   },
   {
     id: 8,
@@ -55,6 +89,11 @@ const movies = [
     year: 2023,
     genre: "Biography",
     image: "https://image.tmdb.org/t/p/w500/ptpr0kGAckfQkJeJIt8st5dglvd.jpg",
+    rating: 8.3,
+    duration: "3h",
+    director: "Christopher Nolan",
+    description:
+      "The story of J. Robert Oppenheimer and the creation of the atomic bomb.",
   },
   {
     id: 9,
@@ -62,6 +101,11 @@ const movies = [
     year: 2022,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+    rating: 7.8,
+    duration: "2h 56m",
+    director: "Matt Reeves",
+    description:
+      "Batman investigates a series of murders linked to Gotham's darkest secrets.",
   },
   {
     id: 10,
@@ -69,6 +113,11 @@ const movies = [
     year: 2022,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
+    rating: 8.2,
+    duration: "2h 11m",
+    director: "Joseph Kosinski",
+    description:
+      "Maverick returns to train a new generation of elite fighter pilots.",
   },
   {
     id: 11,
@@ -76,6 +125,11 @@ const movies = [
     year: 2021,
     genre: "Sci-Fi",
     image: "https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
+    rating: 8.0,
+    duration: "2h 35m",
+    director: "Denis Villeneuve",
+    description:
+      "A young nobleman must protect his family and destiny on the desert planet Arrakis.",
   },
   {
     id: 12,
@@ -83,6 +137,11 @@ const movies = [
     year: 2024,
     genre: "Sci-Fi",
     image: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+    rating: 8.8,
+    duration: "2h 46m",
+    director: "Denis Villeneuve",
+    description:
+      "Paul Atreides embraces his destiny while seeking revenge against his enemies.",
   },
   {
     id: 13,
@@ -90,6 +149,10 @@ const movies = [
     year: 2023,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
+    rating: 8.0,
+    duration: "2h 49m",
+    director: "Chad Stahelski",
+    description: "John Wick battles powerful enemies in his quest for freedom.",
   },
   {
     id: 14,
@@ -97,6 +160,11 @@ const movies = [
     year: 1999,
     genre: "Sci-Fi",
     image: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+    rating: 8.7,
+    duration: "2h 16m",
+    director: "The Wachowskis",
+    description:
+      "A hacker discovers reality is a simulation and joins a rebellion.",
   },
   {
     id: 15,
@@ -104,6 +172,11 @@ const movies = [
     year: 1994,
     genre: "Drama",
     image: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
+    rating: 9.3,
+    duration: "2h 22m",
+    director: "Frank Darabont",
+    description:
+      "A banker wrongly imprisoned finds hope and friendship behind bars.",
   },
   {
     id: 16,
@@ -111,6 +184,11 @@ const movies = [
     year: 1999,
     genre: "Drama",
     image: "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+    rating: 8.8,
+    duration: "2h 19m",
+    director: "David Fincher",
+    description:
+      "An office worker forms an underground fight club that changes his life.",
   },
   {
     id: 17,
@@ -118,6 +196,11 @@ const movies = [
     year: 2000,
     genre: "Action",
     image: "https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg",
+    rating: 8.5,
+    duration: "2h 35m",
+    director: "Ridley Scott",
+    description:
+      "A betrayed Roman general seeks revenge against a corrupt emperor.",
   },
   {
     id: 18,
@@ -125,6 +208,11 @@ const movies = [
     year: 2009,
     genre: "Fantasy",
     image: "https://image.tmdb.org/t/p/w500/kyeqWdyUXW608qlYkRqosgbbJyK.jpg",
+    rating: 7.9,
+    duration: "2h 42m",
+    director: "James Cameron",
+    description:
+      "A marine becomes torn between humanity and the alien world of Pandora.",
   },
   {
     id: 19,
@@ -132,6 +220,11 @@ const movies = [
     year: 2022,
     genre: "Fantasy",
     image: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
+    rating: 7.8,
+    duration: "3h 12m",
+    director: "James Cameron",
+    description:
+      "Jake Sully's family faces new threats while exploring Pandora's oceans.",
   },
   {
     id: 20,
@@ -139,6 +232,10 @@ const movies = [
     year: 2001,
     genre: "Fantasy",
     image: "https://image.tmdb.org/t/p/w500/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+    rating: 8.8,
+    duration: "2h 58m",
+    director: "Peter Jackson",
+    description: "A hobbit begins a perilous quest to destroy a powerful ring.",
   },
   {
     id: 21,
@@ -146,6 +243,10 @@ const movies = [
     year: 1997,
     genre: "Romance",
     image: "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
+    rating: 7.9,
+    duration: "3h 14m",
+    director: "James Cameron",
+    description: "A timeless romance unfolds aboard the ill-fated RMS Titanic.",
   },
   {
     id: 22,
@@ -153,6 +254,10 @@ const movies = [
     year: 2016,
     genre: "Romance",
     image: "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
+    rating: 8.0,
+    duration: "2h 8m",
+    director: "Damien Chazelle",
+    description: "Two dreamers pursue love and ambition in Los Angeles.",
   },
   {
     id: 23,
@@ -160,6 +265,11 @@ const movies = [
     year: 2013,
     genre: "Horror",
     image: "https://image.tmdb.org/t/p/w500/wVYREutTvI2tmxr6ujrHT704wGF.jpg",
+    rating: 7.5,
+    duration: "1h 52m",
+    director: "James Wan",
+    description:
+      "Paranormal investigators help a family haunted by dark forces.",
   },
   {
     id: 24,
@@ -167,6 +277,11 @@ const movies = [
     year: 2017,
     genre: "Horror",
     image: "https://image.tmdb.org/t/p/w500/9E2y5Q7WlCVNEhP5GiVTjhEhx1o.jpg",
+    rating: 7.3,
+    duration: "2h 15m",
+    director: "Andy Muschietti",
+    description:
+      "A group of children confronts a terrifying shape-shifting entity.",
   },
   {
     id: 25,
@@ -174,6 +289,11 @@ const movies = [
     year: 1995,
     genre: "Animation",
     image: "https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg",
+    rating: 8.3,
+    duration: "1h 21m",
+    director: "John Lasseter",
+    description:
+      "Toys come to life when humans aren't around in this Pixar classic.",
   },
   {
     id: 26,
@@ -181,6 +301,10 @@ const movies = [
     year: 2003,
     genre: "Animation",
     image: "https://image.tmdb.org/t/p/w500/eHuGQ10FUzK1mdOY69wF5pGgEf5.jpg",
+    rating: 8.2,
+    duration: "1h 40m",
+    director: "Andrew Stanton",
+    description: "A clownfish crosses the ocean to rescue his captured son.",
   },
   {
     id: 27,
@@ -188,6 +312,11 @@ const movies = [
     year: 2017,
     genre: "Animation",
     image: "https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg",
+    rating: 8.4,
+    duration: "1h 45m",
+    director: "Lee Unkrich",
+    description:
+      "A young musician journeys to the Land of the Dead to uncover family secrets.",
   },
   {
     id: 28,
@@ -195,6 +324,11 @@ const movies = [
     year: 2019,
     genre: "Thriller",
     image: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+    rating: 8.5,
+    duration: "2h 12m",
+    director: "Bong Joon-ho",
+    description:
+      "A poor family infiltrates a wealthy household with unexpected consequences.",
   },
   {
     id: 29,
@@ -202,6 +336,11 @@ const movies = [
     year: 2010,
     genre: "Thriller",
     image: "https://image.tmdb.org/t/p/w500/kve20tXwUZpu4GUX8l6X7Z4jmL6.jpg",
+    rating: 8.2,
+    duration: "2h 18m",
+    director: "Martin Scorsese",
+    description:
+      "A U.S. Marshal investigates a mysterious disappearance at a mental institution.",
   },
   {
     id: 30,
@@ -209,6 +348,11 @@ const movies = [
     year: 2014,
     genre: "Drama",
     image: "https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
+    rating: 8.5,
+    duration: "1h 47m",
+    director: "Damien Chazelle",
+    description:
+      "A young drummer pushes himself to the limit under a demanding instructor.",
   },
 ];
 

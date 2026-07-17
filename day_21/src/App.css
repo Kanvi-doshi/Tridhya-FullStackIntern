@@ -19,10 +19,6 @@
   gap: 15px;
 }
 
-.sidebar h2 {
-  margin-bottom: 20px;
-}
-
 .sidebar a {
   color: white;
   text-decoration: none;
@@ -32,6 +28,17 @@
 
 .sidebar a:hover {
   background: #374151;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.sidebar h2 {
+  margin-bottom: 0;
 }
 
 .content {
@@ -51,7 +58,7 @@
 }
 
 .movie-card {
-  width: 220px;
+  width: 100%;
   position: relative;
   background: white;
   border-radius: 12px;
@@ -68,7 +75,7 @@
 
 .movie-card img {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
 }
 
@@ -94,6 +101,29 @@
 .movie-card button:hover {
   opacity: 0.9;
 }
+
+.dark .movie-card {
+  background: #1f2937;
+  color: white;
+}
+
+.dark .movie-card p {
+  color: #d1d5db;
+}
+
+.movie-details button {
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.movie-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .fav {
   display: flex;
   gap: 2px;
@@ -194,7 +224,7 @@
 
 .home p {
   margin-top: 10px;
-  color: #090909;
+  color: inherit;
 }
 
 .home h2 {
@@ -203,7 +233,7 @@
   margin: 20px 0 25px;
   font-size: 2rem;
   font-weight: 700;
-  color: #060606;
+  color: inherit;
   letter-spacing: 1px;
   padding-bottom: 15px;
 }
@@ -253,4 +283,54 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
+}
+
+.light {
+  background-color: white;
+  color: black;
+}
+
+.dark {
+  background-color: #121212;
+  color: white;
+}
+
+
+.switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background: #2563eb;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
 }

@@ -1,10 +1,13 @@
 import { useState } from "react";
 import movies from "../data/movies";
 import { FaHeart, FaRegHeart, FaFilter } from "react-icons/fa";
+import { Link, useSearchParams} from "react-router-dom";
 
 function Movies({ favorites, setFavorites }) {
   const [search, setSearch] = useState("");
-  const [genreFilter, setGenreFilter] = useState("All");
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const genreFilter = searchParams.get("genre") || "All";
 
   function toggleFavorite(movie) {
     const exists = favorites.find((fav) => fav.id === movie.id);
@@ -37,7 +40,7 @@ function Movies({ favorites, setFavorites }) {
           <FaFilter className="filter-icon" />
           <select
             value={genreFilter}
-            onChange={(e) => setGenreFilter(e.target.value)}
+            onChange={(e) => setSearchParams({ genre: e.target.value })}
           >
             <option value="All">All Genres</option>
             <option value="Sci-Fi">Sci-Fi</option>
@@ -52,12 +55,32 @@ function Movies({ favorites, setFavorites }) {
       <div className="movies-grid">
         {filteredMovies.map((movie) => (
           <div className="movie-card" key={movie.id}>
-            <div className={`genre-tag ${movie.genre.toLowerCase()}`}>
-              {movie.genre}
-            </div>
-            <img src={movie.image} alt={movie.title} />
-            <h3>{movie.title}</h3>
-            <p>Released: {movie.year}</p>
+            <Link
+              key={movie.id}
+              to={`/movie/${movie.id}`}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className={`genre-tag ${movie.genre.toLowerCase()}`}>
+                {movie.genre}
+              </div>
+
+              <img src={movie.image} alt={movie.title} />
+
+              <h3>{movie.title}</h3>
+
+              <p>
+                <strong>Released: </strong>
+                {movie.year}
+              </p>
+
+              <p>
+                <strong>Rating:</strong> {movie.rating}
+              </p>
+
+              <p>
+                <strong>Duration:</strong> {movie.duration}
+              </p>
+            </Link>
             <button onClick={() => toggleFavorite(movie)}>
               {favorites.some((fav) => fav.id === movie.id) ? (
                 <>
