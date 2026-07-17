@@ -1,77 +1,61 @@
-import { Link } from "react-router-dom";
 import movies from "../data/movies";
-
+import Av4 from "../assets/Av4.jpg"
+import batman2 from "../assets/batman2.jpg"
+import F3 from "../assets/F3.jpg"
+import secretWars from "../assets/secretWars.webp"
+import spider4 from "../assets/spider4.jpg"
+import TS5 from "../assets/TS5.jpg"
+import TheLordsofrings from "../assets/TheLordsofrings.jpg"
 function Home() {
   const upcomingMovies = [
     {
-      id: 101,
+      id: 31,
       title: "Avengers: Secret Wars",
       year: 2027,
       genre: "Action",
-      image: "https://picsum.photos/300/450?random=101",
+      image: secretWars,
     },
     {
-      id: 102,
+      id: 32,
       title: "Spider-Man 4",
       year: 2026,
       genre: "Action",
-      image: "https://picsum.photos/300/450?random=102",
+      image: spider4,
     },
     {
-      id: 103,
+      id: 33,
       title: "The Batman Part II",
       year: 2027,
       genre: "Action",
-      image: "https://picsum.photos/300/450?random=103",
+      image: batman2,
     },
     {
-      id: 104,
-      title: "Dune: Messiah",
-      year: 2027,
-      genre: "Sci-Fi",
-      image: "https://picsum.photos/300/450?random=104",
-    },
-    {
-      id: 105,
-      title: "Shrek 5",
-      year: 2026,
-      genre: "Animation",
-      image: "https://picsum.photos/300/450?random=105",
-    },
-    {
-      id: 106,
+      id: 34,
       title: "Toy Story 5",
       year: 2026,
       genre: "Animation",
-      image: "https://picsum.photos/300/450?random=106",
+      image: TS5,
     },
     {
-      id: 107,
+      id: 35,
       title: "Frozen 3",
       year: 2027,
       genre: "Animation",
-      image: "https://picsum.photos/300/450?random=107",
+      image: F3,
     },
     {
-      id: 108,
+      id: 36,
       title: "The Lord of the Rings: Hunt for Gollum",
       year: 2027,
       genre: "Fantasy",
-      image: "https://picsum.photos/300/450?random=108",
+      image: TheLordsofrings,
     },
     {
-      id: 109,
+      id: 37,
       title: "Avatar 4",
       year: 2029,
       genre: "Fantasy",
-      image: "https://picsum.photos/300/450?random=109",
-    },
-    {
-      id: 110,
-      title: "Superman",
-      year: 2026,
-      genre: "Action",
-      image: "https://picsum.photos/300/450?random=110",
+      image:Av4,
     },
   ];
 
@@ -97,7 +81,7 @@ function Home() {
       </div>
 
       <h2> Upcoming Movies</h2>
-      <div className="upcoming-container">
+      <div className="movies-grid">
         {upcomingMovies.map((movie) => (
           <div className="movie-card" key={movie.id}>
             <div className={`genre-tag ${movie.genre.toLowerCase()}`}>

@@ -45,10 +45,11 @@ function Movies({ favorites, setFavorites }) {
             <option value="Drama">Drama</option>
             <option value="Fantasy">Fantasy</option>
             <option value="Biography">Biography</option>
+            <option value="Animation">Animation</option>
           </select>
         </div>
       </div>
-      <div className="movie-grid">
+      <div className="movies-grid">
         {filteredMovies.map((movie) => (
           <div className="movie-card" key={movie.id}>
             <div className={`genre-tag ${movie.genre.toLowerCase()}`}>
