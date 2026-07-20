@@ -1,22 +1,24 @@
 import { useState } from "react";
 import movies from "../data/movies";
 import { FaHeart, FaRegHeart, FaFilter } from "react-icons/fa";
-import { Link, useSearchParams} from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useFavorites } from "../hooks/useFav";
 
 function Movies({ favorites, setFavorites }) {
   const [search, setSearch] = useState("");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const genreFilter = searchParams.get("genre") || "All";
+  const { toggleFavorite, isFavorite } = useFavorites(favorites, setFavorites);
 
-  function toggleFavorite(movie) {
-    const exists = favorites.find((fav) => fav.id === movie.id);
-    if (exists) {
-      setFavorites(favorites.filter((fav) => fav.id !== movie.id));
-    } else {
-      setFavorites([...favorites, movie]);
-    }
-  }
+  // function toggleFavorite(movie) {
+  //   const exists = favorites.find((fav) => fav.id === movie.id);
+  //   if (exists) {
+  //     setFavorites(favorites.filter((fav) => fav.id !== movie.id));
+  //   } else {
+  //     setFavorites([...favorites, movie]);
+  //   }
+  // }
 
   const filteredMovies = movies.filter((movie) => {
     const matchesSearch = movie.title
@@ -82,7 +84,7 @@ function Movies({ favorites, setFavorites }) {
               </p>
             </Link>
             <button onClick={() => toggleFavorite(movie)}>
-              {favorites.some((fav) => fav.id === movie.id) ? (
+              {isFavorite(movie.id) ? (
                 <>
                   <FaHeart className="favorite-icon" /> Added
                 </>
