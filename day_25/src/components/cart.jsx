@@ -29,7 +29,7 @@ function Cart({ setShowCart }) {
               <div key={item.id} className="border rounded-xl p-4">
                 <div className="flex justify-between">
                   <div>
-                    <h3 className="font-semibold">{item.title}</h3>
+                    <h3 className="font-semibold line-clamp-1">{item.title}</h3>
 
                     <p className="text-gray-500">₹{item.price}</p>
                   </div>
