@@ -1,0 +1,91 @@
+import products from "../data/product";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../redux/cartSlice";
+import { useState } from "react";
+import { toast } from "react-toastify";
+
+function ProductList() {
+  const dispatch = useDispatch();
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesCategory = category === "All" || product.category === category;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <div className="bg-white p-8 rounded-2xl w-full">
+      <h2 className="text-4xl font-bold text-center text-slate-800 mb-10">
+        Our Products
+        <div className="w-24 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
+      </h2>
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border p-3 rounded-lg flex-1"
+        />
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border p-3 rounded-lg"
+        >
+          <option value="All">All Categories</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Fashion">Fashion</option>
+          <option value="Home Appliances">Home Appliances</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((product) => (
+          <div
+            key={product.id}
+            className="border rounded-xl p-4 shadow-md hover:shadow-xl transition duration-300"
+          >
+            <img
+              src={product.image}
+              alt={product.title}
+              className="w-full h-48 object-cover rounded-lg"
+            />
+
+            <div className="mt-4">
+              <h3 className="font-bold text-xl">{product.title}</h3>
+
+              <p className="text-sm text-gray-500">{product.category}</p>
+
+              <p className="text-gray-600 mt-2 text-sm">
+                {product.description}
+              </p>
+
+              <p className="text-2xl font-semibold mt-3">₹{product.price}</p>
+
+              <button
+                onClick={() => {
+                  dispatch(addToCart(product));
+                  toast.success(`${product.title} added to cart!`, {
+                    position: "top-right",
+                    autoClose: 1000,
+                  });
+                }}
+                className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg"
+              >
+                Add To Cart
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default ProductList;
