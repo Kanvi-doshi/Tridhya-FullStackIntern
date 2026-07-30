@@ -1,5 +1,5 @@
 import Link from "next/link";
-import BackButton from "../../components/backButton";
+import BackButton from "../../../components/backButton";
 export default async function CategoryPage({ params }) {
   const response = await fetch("https://dummyjson.com/recipes");
   const data = await response.json();

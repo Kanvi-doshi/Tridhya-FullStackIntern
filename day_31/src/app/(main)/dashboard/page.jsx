@@ -51,7 +51,7 @@ export default async function Dashboard() {
           {categories.map((category) => (
             <Link
               key={category}
-              href={`/categories/${category}`}
+              href={`/dashboard/categories/${category}`}
               className="bg-white px-6 py-3 rounded-xl shadow-lg hover:bg-orange-500 hover:text-white transition"
             >
               {category}
@@ -66,7 +66,7 @@ export default async function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {data.recipes.map((recipe) => (
-            <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
+            <Link key={recipe.id} href={`/dashboard/recipes/${recipe.id}`}>
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl hover:scale-105 transition duration-300 cursor-pointer">
                 <img
                   src={recipe.image}
