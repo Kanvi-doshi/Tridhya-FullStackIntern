@@ -1,7 +1,12 @@
 import DashboardCard from "../components/dashboardCard";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+
 export default async function Dashboard() {
-  const response = await fetch("https://dummyjson.com/recipes");
+  const response = await fetch("https://dummyjson.com/recipes?limit=6", {
+    cache:"no-store",
+  });
 
   const data = await response.json();
 

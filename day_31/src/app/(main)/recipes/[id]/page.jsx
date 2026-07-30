@@ -2,13 +2,16 @@ import BackButton from "../../components/backButton";
 export default async function Recipe({ params }) {
   const { id } = await params;
 
-  const response = await fetch(`https://dummyjson.com/recipes/${id}`);
+  const response = await fetch(`https://dummyjson.com/recipes/${id}`, {
+    cache: "force-cache",
+  });
   const recipe = await response.json();
 
   return (
     <div className="p-2 max-w-5xl mx-auto">
       <BackButton />
       <h1 className="text-4xl font-bold mb-8">{recipe.name}</h1>
+
       <div className="grid grid-cols-2 gap-6 ">
         <img
           src={recipe.image}
