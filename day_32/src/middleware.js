@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
 
 export function middleware(request) {
-  const user = request.cookies.get("user");
+  const token = request.cookies.get("token");
 
-  if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  const pathname = request.nextUrl.pathname;
+
+  // Public Routes
+  if (
+    pathname === "/login" ||
+    pathname === "/register"
+  ) {
+    return NextResponse.next();
   }
 
-  const role = user.value;
-
-  if (request.nextUrl.pathname === "/admin" && role !== "admin") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (request.nextUrl.pathname === "/employees" && role === "employee") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Protected Routes
+  if (!token) {
+    return NextResponse.redirect(
+      new URL("/login", request.url)
+    );
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard", "/profile", "/employees", "/admin", "/settings"],
+  matcher: ["/dashboard"],
 };

@@ -2,59 +2,90 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { users } from "@/data/users";
 
 export default function Login() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleLogin = () => {
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const users =
+      JSON.parse(localStorage.getItem("users")) || [];
+
     const user = users.find(
-      (u) => u.email === email && u.password === password,
+      (u) =>
+        u.email === formData.email &&
+        u.password === formData.password
     );
 
-    if (user) {
-      document.cookie = `user=${user.role}; path=/`;
-
-      alert(`Welcome ${user.role}!`);
-
-      router.push("/dashboard");
-    } else {
-      alert("Invalid Credentials");
+    if (!user) {
+      alert("Invalid Email or Password!");
+      return;
     }
+
+    // Save logged-in user
+    localStorage.setItem(
+      "currentUser",
+      JSON.stringify(user)
+    );
+
+    // (We'll use these in middleware later)
+    document.cookie = "token=loggedin; path=/";
+    document.cookie = `role=${user.role}; path=/`;
+
+    alert(`Welcome ${user.name}!`);
+
+    router.push("/dashboard");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white w-[400px] p-8 rounded-2xl shadow-lg">
-        <h1 className="text-3xl font-bold text-center mb-8">Employee Portal</h1>
+    <div className="min-h-screen flex justify-center items-center bg-gray-100">
+      <div className="w-[400px] bg-white p-8 rounded-2xl shadow-lg">
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Login
+        </h1>
 
-        <div className="space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <input
             type="email"
+            name="email"
             placeholder="Enter Email"
+            value={formData.email}
+            onChange={handleChange}
             className="w-full border p-3 rounded-lg"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
+            name="password"
             placeholder="Enter Password"
+            value={formData.password}
+            onChange={handleChange}
             className="w-full border p-3 rounded-lg"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
           />
 
           <button
-            onClick={handleLogin}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+            type="submit"
+            className="w-full bg-green-600 text-white p-3 rounded-lg"
           >
             Login
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );
