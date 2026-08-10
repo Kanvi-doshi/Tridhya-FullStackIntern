@@ -1,5 +1,5 @@
-import User from "../models/User.js";
-import { verifyToken } from "../utils/jwt.js";
+import User from "../../models/User.js";
+import { verifyToken } from "../../components/utils/jwt.js";
 
 export const protect = async (req, res, next) => {
   try {
@@ -11,8 +11,8 @@ export const protect = async (req, res, next) => {
         success: false,
         message: "Access denied. Token not provided.",
       });
-      }
-      
+    }
+
     const token = authHeader.split(" ")[1];
 
     // Verify Token
