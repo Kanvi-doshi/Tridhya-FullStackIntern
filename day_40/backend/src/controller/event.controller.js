@@ -22,11 +22,11 @@ export const createEvent = async (req, res, next) => {
 
 export const getEvents = async (req, res, next) => {
   try {
-    const events = await getAllEvents(req.query);
+    const event = await getAllEvents(req.query);
 
     return res.status(200).json({
       success: true,
-      data: events,
+      ...event,
     });
   } catch (error) {
     next(error);
