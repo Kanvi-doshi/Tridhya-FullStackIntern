@@ -1,4 +1,5 @@
 import Event from "../models/Event.js";
+import User from "../models/User.js";
 import {
   sendEventRegistrationEmail,
   sendEventCancellationEmail,
@@ -41,7 +42,10 @@ export const registerForEvent = async (eventId, userId) => {
   await event.save();
 
   const user = await User.findById(userId);
-  await sendEventRegistrationEmail(user, event);
+
+  sendEventRegistrationEmail(user, event).catch((error) => {
+    console.error("Registration email failed:", error);
+  });
 
   return event;
 };
@@ -72,7 +76,9 @@ export const cancelRegistration = async (eventId, userId) => {
   await event.save();
 
   const user = await User.findById(userId);
-  await sendEventCancellationEmail(user, event);
+  sendEventCancellationEmail(user, event).catch((error) => {
+    console.error("Cancellation email failed:", error);
+  });
 
   return event;
 };

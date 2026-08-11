@@ -1,4 +1,5 @@
 import Event from "../models/Event.js";
+import User from "../models/User.js";
 import { sendEventCreatedEmail } from "./email.service.js";
 
 export const createEvent = async (eventData, userId) => {
@@ -6,8 +7,10 @@ export const createEvent = async (eventData, userId) => {
     ...eventData,
     organizer: userId,
   });
-
-  await sendEventCreatedEmail(user, event);
+  const user = await User.findById(userId);
+  sendEventCreatedEmail(user, event).catch((error) => {
+    console.error("Event created:", error);
+  });
   return event;
 };
 
@@ -26,7 +29,10 @@ export const getAllEvents = async (query) => {
   }
 
   if (query.location) {
-    filter.location = query.location;
+    filter.location = {
+      $regex: `^${query.location}`,
+      $options: "i",
+    };
   }
 
   const page = Number(query.page) || 1;
