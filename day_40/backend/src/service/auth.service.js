@@ -23,7 +23,7 @@ export const registerUser = async (userData) => {
     ...userData,
     password: hashedPassword,
   });
-  
+
   await sendWelcomeEmail(user);
   return {
     id: user._id,
@@ -82,7 +82,6 @@ export const getUserProfile = async (userId) => {
 };
 
 export const updateUserProfile = async (userId, updates) => {
-  // Check if email already exists
   if (updates.email) {
     const existingUser = await User.findOne({
       email: updates.email,
@@ -96,7 +95,6 @@ export const updateUserProfile = async (userId, updates) => {
     }
   }
 
-  // Hash password if updating
   if (updates.password) {
     updates.password = await bcrypt.hash(updates.password, 10);
   }
@@ -106,6 +104,11 @@ export const updateUserProfile = async (userId, updates) => {
     runValidators: true,
   }).select("-password");
 
+  if (!updatedUser) {
+    const error = new Error("User not found");
+    error.status = 404;
+    throw error;
+  }
   return updatedUser;
 };
 

@@ -3,6 +3,7 @@ import {
   cancelRegistration,
   getMyEvents,
   getEventAttendees,
+  removeAttendeeFromEvent,
 } from "../service/registration.service.js";
 
 // Register for an event
@@ -59,6 +60,23 @@ export const eventAttendees = async (req, res, next) => {
       success: true,
       count: attendees.length,
       data: attendees,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const removeAttendee = async (req, res, next) => {
+  try {
+    const event = await removeAttendeeFromEvent(
+      req.params.eventId,
+      req.params.userId,
+      req.user._id,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "User removed from event successfully",
+      data: event,
     });
   } catch (error) {
     next(error);

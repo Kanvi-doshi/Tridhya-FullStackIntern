@@ -19,8 +19,6 @@ export async function apiRequest(endpoint, options = {}) {
   });
 
   const data = await response.json();
-  // console.log("API RESPONSE:", data);
-  // console.log("STATUS:", response.status);
 
   if (!response.ok) {
     let message = data.message || "Something went wrong";

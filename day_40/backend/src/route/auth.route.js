@@ -7,6 +7,7 @@ import {
   deleteProfile,
 } from "../controller/auth.controller.js";
 import { protect } from "../components/middleware/auth.middleware.js";
+import { uploadProfileImage } from "../components/middleware/upload.middleware.js";
 import {
   registerSchema,
   loginSchema,
@@ -33,7 +34,13 @@ const validate = (schema) => (req, res, next) => {
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 router.get("/profile", protect, getProfile);
-router.put("/profile", protect, validate(updateProfileSchema), updateProfile);
+router.put(
+  "/profile",
+  protect,
+  uploadProfileImage.single("profileImage"),
+  validate(updateProfileSchema),
+  updateProfile,
+);
 router.delete("/profile", protect, deleteProfile);
 
 export default router;

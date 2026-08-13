@@ -1,4 +1,6 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -8,6 +10,9 @@ import eventRoutes from "./route/event.route.js";
 import registrationRoutes from "./route/registration.route.js";
 import organizerRoutes from "./route/organizer.route.js";
 import adminRoutes from "./route/admin.route.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -25,6 +30,7 @@ app.use("/", registrationRoutes);
 app.use("/event", eventRoutes);
 app.use("/organizer", organizerRoutes);
 app.use("/admin", adminRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 app.use(errorHandler);
 

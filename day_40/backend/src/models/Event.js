@@ -33,12 +33,6 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
-    image: {
-      type: String,
-      default: "",
-    },
-
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

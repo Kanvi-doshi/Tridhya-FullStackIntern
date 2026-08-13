@@ -5,6 +5,7 @@ import {
   unregisterEvent,
   myRegisteredEvents,
   eventAttendees,
+  removeAttendee,
 } from "../controller/registration.controller.js";
 
 import { protect } from "../components/middleware/auth.middleware.js";
@@ -42,6 +43,13 @@ router.get(
   protect,
   authorize("organizer", "admin"),
   eventAttendees,
+);
+
+router.delete(
+  "/event/:eventId/attendees/:userId",
+  protect,
+  authorize("organizer", "admin"),
+  removeAttendee,
 );
 
 export default router;

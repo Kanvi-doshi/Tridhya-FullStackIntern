@@ -15,7 +15,6 @@ import {
 function ProfileContent() {
   const router = useRouter();
   const { user, logout } = useAuth();
-
   const [profile, setProfile] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -25,9 +24,7 @@ function ProfileContent() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [editing, setEditing] = useState(false);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -50,6 +47,7 @@ function ProfileContent() {
         name: profileData.name || "",
         email: profileData.email || "",
       });
+      
     } catch (error) {
       console.error("Failed to fetch profile:", error);
 
@@ -95,6 +93,58 @@ function ProfileContent() {
     }
   }
 
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size must be less than 5MB.");
+      return;
+    }
+
+    try {
+      setError("");
+      setSuccess("");
+
+      const formData = new FormData();
+      formData.append("profileImage", file);
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        },
+      );
+
+      const data = await response.json();
+
+        if (!response.ok) {
+        throw new Error(
+          data.message ||
+            JSON.stringify(data.errors) ||
+            "Failed to upload image",
+        );
+      }
+      setProfile(data.data);
+
+      setSuccess("Profile image updated successfully.");
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      setError(error.message || "Failed to upload image");
+    }
+  }
   async function handleDelete() {
     const confirmed = window.confirm(
       "Are you sure you want to delete your account? This action cannot be undone.",
@@ -137,17 +187,28 @@ function ProfileContent() {
       </button>
 
       <div className="mx-auto max-w-3xl">
-        {/* Back */}
-
         {/* Header */}
-        <div className="mb-3">
-          {/* <p className="text-sm text-blue-500">ACCOUNT</p> */}
-
-          <h1 className="mt-1 text-3xl font-bold">My Profile</h1>
-
-          <p className="mt-2 text-slate-400">
-            View and manage your account information.
-          </p>
+        <div className="mb-3 grid grid-cols-2 items-center">
+          <div>
+            <h1 className="text-3xl font-bold">My Profile</h1>
+            <p className="text-slate-400">
+              View and manage your account information.
+            </p>
+          </div>
+          <div className="flex justify-end">
+            {!editing && (
+              <button
+                onClick={() => {
+                  setEditing(true);
+                  setSuccess("");
+                  setError("");
+                }}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700"
+              >
+                Edit Profile
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Messages */}
@@ -164,28 +225,38 @@ function ProfileContent() {
         )}
 
         {/* Profile Card */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          {/* Top */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div>
-              <h2 className="text-xl font-semibold">Personal Information</h2>
-
-              <p className="mt-1 text-sm text-slate-400">
-                Your account details
-              </p>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Profile Image */}
+          <div className="flex flex-col items-center border-slate-800 justify-center ">
+            <div className="relative">
+              {profile?.profileImage ? (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${profile.profileImage}`}
+                  alt="Profile"
+                  className="h-28 w-28 rounded-full border-4 border-slate-700 object-cover"
+                />
+              ) : (
+                <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-slate-700 bg-slate-800 text-3xl font-bold text-slate-400">
+                  {profile?.name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+              )}
             </div>
+            <p className="mt-2 text-xs text-slate-500">
+              JPG, PNG or WEBP · Maximum 5MB
+            </p>
+            {editing && (
+              <div className="mt-4 flex gap-3 item-center justify-center">
+                <label className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700">
+                  {profile?.profileImage ? "Change Photo" : "Upload Photo"}
 
-            {!editing && (
-              <button
-                onClick={() => {
-                  setEditing(true);
-                  setSuccess("");
-                  setError("");
-                }}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700"
-              >
-                Edit Profile
-              </button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             )}
           </div>
 
@@ -291,7 +362,7 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <ProtectedRoute allowedRoles={["user"]}>
+    <ProtectedRoute allowedRoles={["user", "organizer", "admin"]}>
       <ProfileContent />
     </ProtectedRoute>
   );

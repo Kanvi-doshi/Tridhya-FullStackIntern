@@ -1,6 +1,7 @@
 import {
   createEvent as createEventService,
   getAllEvents,
+  getMyEvents,
   getEventById,
   updateEvent as updateEventService,
   deleteEvent as deleteEventService,
@@ -23,6 +24,18 @@ export const createEvent = async (req, res, next) => {
 export const getEvents = async (req, res, next) => {
   try {
     const event = await getAllEvents(req.query);
+
+    return res.status(200).json({
+      success: true,
+      ...event,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const getMyEventsController = async (req, res, next) => {
+  try {
+    const event = await getMyEvents(req.user._id, req.query);
 
     return res.status(200).json({
       success: true,

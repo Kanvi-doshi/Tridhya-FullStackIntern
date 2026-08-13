@@ -3,41 +3,35 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useAuth } from "@/components/context/AuthContext";
+// import { useAuth } from "@/components/context/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoutes";
-import { getAllEvents } from "@/service/event.service";
+
+import { getMyEvents, deleteEvent } from "@/service/event.service";
 
 function OrganizerEventsContent() {
   const router = useRouter();
-  const { user } = useAuth();
+  // const { user } = useAuth();
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      fetchEvents();
-    }
-  }, [user]);
+    fetchEvents();
+  }, []);
 
   async function fetchEvents() {
     try {
       setLoading(true);
       setError("");
 
-      const response = await getAllEvents();
+      const response = await getMyEvents();
 
-      const allEvents = response.event || response.data || [];
-
-      // Show only events created by this organizer
-      const organizerEvents = allEvents.filter(
-        (event) => event.organizer?._id?.toString() === user?.id?.toString(),
-      );
-
-      setEvents(organizerEvents);
+      setEvents(response.event || []);
     } catch (error) {
       console.error("Failed to fetch events:", error);
+
       setError(error.message || "Failed to load events");
     } finally {
       setLoading(false);
@@ -52,10 +46,20 @@ function OrganizerEventsContent() {
     if (!confirmed) return;
 
     try {
-      // We'll connect your delete service here
-      console.log("Delete event:", eventId);
+      setDeletingId(eventId);
+      setError("");
+
+      await deleteEvent(eventId);
+
+      setEvents((currentEvents) =>
+        currentEvents.filter((event) => event._id !== eventId),
+      );
     } catch (error) {
+      console.error("Failed to delete event:", error);
+
       setError(error.message || "Failed to delete event");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -63,63 +67,59 @@ function OrganizerEventsContent() {
     <main className="min-h-screen bg-slate-950 p-8 text-white">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <button
-              onClick={() => router.back()}
-              className="mb-5 rounded-lg bg-slate-800 px-4 py-2 hover:bg-slate-700"
+              onClick={() => router.push("/dashboard/organizer")}
+              className="mb-6 rounded-lg bg-slate-800 px-4 py-2 hover:bg-slate-700"
             >
-              ← Back
+              ← Dashboard
             </button>
-
-            <p className="text-sm text-blue-500">ORGANIZER</p>
 
             <h1 className="mt-2 text-3xl font-bold">My Events</h1>
 
             <p className="mt-2 text-slate-400">
-              Manage the events you have created.
+              Create and manage your events.
             </p>
           </div>
 
           <button
-            onClick={() => router.push("/organizer/events/create")}
+            onClick={() => router.push("/events/create")}
             className="rounded-lg bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-700"
           >
-            + Create Event
+            Create Event
           </button>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mt-8 rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-400">
+          <div className="mb-6 rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-400">
             {error}
           </div>
         )}
 
         {/* Loading */}
         {loading ? (
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">
             Loading events...
           </div>
         ) : events.length === 0 ? (
-          /* No Events */
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-10 text-center">
-            <h2 className="text-xl font-semibold">No events created yet</h2>
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-10 text-center">
+            <h2 className="text-xl font-semibold">No events yet</h2>
 
             <p className="mt-2 text-slate-400">
-              Create your first event to get started.
+              You haven't created any events yet.
             </p>
 
             <button
-              onClick={() => router.push("/organizer/events/create")}
+              onClick={() => router.push("/events/create")}
               className="mt-6 rounded-lg bg-blue-600 px-5 py-3 hover:bg-blue-700"
             >
-              Create Event
+              Create Your First Event
             </button>
           </div>
         ) : (
-          /* Events */
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => (
               <div
                 key={event._id}
@@ -147,10 +147,24 @@ function OrganizerEventsContent() {
                   </p>
                 )}
 
+                {/* Time */}
+                {event.time && (
+                  <p className="mt-2 text-sm text-slate-300">
+                    Time: {event.time}
+                  </p>
+                )}
+
                 {/* Location */}
                 {event.location && (
                   <p className="mt-2 text-sm text-slate-300">
                     Location: {event.location}
+                  </p>
+                )}
+
+                {/* Category */}
+                {event.category && (
+                  <p className="mt-2 text-sm text-slate-400">
+                    Category: {event.category}
                   </p>
                 )}
 
@@ -161,36 +175,22 @@ function OrganizerEventsContent() {
                   </p>
                 )}
 
-                {/* Attendees */}
-                <p className="mt-2 text-sm text-slate-400">
-                  Registrations: {event.attendees?.length || 0}
-                </p>
-
-                {/* Buttons */}
-                <div className="mt-auto flex gap-3 pt-6">
+                {/* Actions */}
+                <div className=" grid grid-cols-2 mt-auto flex gap-3 pt-6">
                   <button
-                    onClick={() =>
-                      router.push(`/organizer/events/${event._id}`)
-                    }
+                    onClick={() => router.push(`/events/${event._id}/edit`)}
                     className="flex-1 rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700"
-                  >
-                    View
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      router.push(`/organizer/events/${event._id}/edit`)
-                    }
-                    className="flex-1 rounded-lg bg-slate-700 px-4 py-2 hover:bg-slate-600"
                   >
                     Edit
                   </button>
 
+                  {/* Delete */}
                   <button
                     onClick={() => handleDelete(event._id)}
-                    className="rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700"
+                    disabled={deletingId === event._id}
+                    className=" w-full rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Delete
+                    {deletingId === event._id ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </div>

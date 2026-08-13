@@ -4,6 +4,7 @@ import {
   deleteUser,
   getAllEventsAdmin,
   deleteEventAdmin,
+  getAdminStats,
 } from "../service/admin.service.js";
 
 // GET /admin/users
@@ -76,4 +77,15 @@ export const removeEvent = async (req, res, next) => {
     next(error);
   }
 };
+export const adminStats = async (req, res, next) => {
+  try {
+    const stats = await getAdminStats();
 
+    return res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

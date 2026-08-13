@@ -34,6 +34,12 @@ export async function getAllEvents(params = {}) {
   });
 }
 
+export async function getMyEvents() {
+  return apiRequest("/event/my-events", {
+    method: "GET",
+  });
+}
+
 export async function getEventById(id) {
   return apiRequest(`/event/${id}`, {
     method: "GET",

@@ -49,7 +49,13 @@ export const getProfile = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const updatedUser = await updateUserProfile(req.user._id, req.body);
+    const updates = { ...req.body };
+
+    if (req.file) {
+      updates.profileImage = `/uploads/profile/${req.file.filename}`;
+    }
+
+    const updatedUser = await updateUserProfile(req.user._id, updates);
 
     return res.status(200).json({
       success: true,

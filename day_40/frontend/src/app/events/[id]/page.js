@@ -23,9 +23,9 @@ function EventDetailsContent() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   useEffect(() => {
-    if (params.id) {
-      fetchEvent();
-    }
+    if (!params.id) return;
+
+    fetchEvent();
   }, [params.id]);
 
   async function fetchEvent() {
@@ -41,6 +41,23 @@ function EventDetailsContent() {
       setError(error.message || "Failed to load event");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchAttendees() {
+    try {
+      setAttendeeLoading(true);
+      setAttendeeError("");
+
+      const response = await getEventAttendees(params.id);
+
+      setAttendees(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch attendees:", error);
+
+      setAttendeeError(error.message || "Failed to load registered users");
+    } finally {
+      setAttendeeLoading(false);
     }
   }
 
@@ -64,10 +81,8 @@ function EventDetailsContent() {
       showToast("Event registered successfully", "success");
     } catch (error) {
       setError(error.message || "Failed to register for this event");
-
     } finally {
       setRegistering(false);
-      
     }
   }
 

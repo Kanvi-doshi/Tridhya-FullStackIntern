@@ -8,6 +8,7 @@ import {
   getMyRegisteredEvents,
   unregisterFromEvent,
 } from "@/service/registration.service";
+import { getMyProfile } from "@/service/profile.service";
 
 function UserDashboardContent() {
   const router = useRouter();
@@ -16,11 +17,25 @@ function UserDashboardContent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [profileImage, setProfileImage] = useState("");
 
   useEffect(() => {
     fetchMyEvents();
   }, []);
 
+  useEffect(() => {
+    fetchProfileImage();
+  }, []);
+
+  async function fetchProfileImage() {
+    try {
+      const response = await getMyProfile();
+
+      setProfileImage(response.data?.profileImage || "");
+    } catch (error) {
+      console.error("Failed to fetch profile image:", error);
+    }
+  }
   async function fetchMyEvents() {
     try {
       setLoading(true);
@@ -88,20 +103,40 @@ function UserDashboardContent() {
             <p className="text-sm text-blue-500">USER DASHBOARD</p>
 
             <h1 className="mt-2 text-3xl font-bold">Welcome, {user?.name}</h1>
+
             <p className="mt-2 text-slate-400">
               Manage your events and bookings.
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              logout();
-              router.replace("/login");
-            }}
-            className="rounded-lg bg-red-600 px-5 py-2 hover:bg-red-700"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/profile")}
+              className="group relative h-12 w-12 overflow-hidden rounded-full border-2 border-slate-700 transition hover:border-blue-500"
+              title="My Profile"
+            >
+              {profileImage ? (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${profileImage}`}
+                  alt="Profile"
+                  className="h-full w-full object-cover transition group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-slate-800 text-lg font-semibold text-slate-300">
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                logout();
+                router.replace("/login");
+              }}
+              className="rounded-lg bg-red-600 px-5 py-2 hover:bg-red-700"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -141,19 +176,6 @@ function UserDashboardContent() {
                 className=" rounded-lg bg-slate-700 px-4 py-2 hover:bg-slate-600"
               >
                 View Bookings
-              </button>
-            </div>
-          </div>
-
-          <div className=" flex flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-lg font-semibold">Profile</h2>
-            <p className="mt-2 text-slate-400">{user?.email}</p>
-            <div className="mt-auto pt-5">
-              <button
-                onClick={() => router.push("/profile")}
-                className=" rounded-lg bg-slate-700 px-4 py-2 hover:bg-slate-600"
-              >
-                View Profile
               </button>
             </div>
           </div>

@@ -23,3 +23,9 @@ export async function getEventAttendees(eventId) {
     method: "GET",
   });
 }
+
+export async function removeAttendee(eventId, userId) {
+  return apiRequest(`/registration/event/${eventId}/attendees/${userId}`, {
+    method: "DELETE",
+  });
+}

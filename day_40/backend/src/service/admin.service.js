@@ -65,3 +65,19 @@ export const deleteEventAdmin = async (eventId) => {
 
   return;
 };
+
+export const getAdminStats = async () => {
+  const [users, organizers, admins, events] = await Promise.all([
+    User.countDocuments({ role: "user" }),
+    User.countDocuments({ role: "organizer" }),
+    User.countDocuments({ role: "admin" }),
+    Event.countDocuments(),
+  ]);
+
+  return {
+    users,
+    organizers,
+    admins,
+    events,
+  };
+};

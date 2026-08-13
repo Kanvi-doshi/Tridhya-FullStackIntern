@@ -118,3 +118,39 @@ export const getEventAttendees = async (eventId, currentUser) => {
 
   return event.attendees;
 };
+
+export const removeAttendeeFromEvent = async (eventId, userId, organizerId) => {
+  const event = await Event.findById(eventId);
+
+  if (!event) {
+    const error = new Error("Event not found");
+    error.status = 404;
+    throw error;
+  }
+
+  // Make sure this event belongs to the logged-in organizer
+  if (event.organizer.toString() !== organizerId.toString()) {
+    const error = new Error("You are not allowed to manage this event");
+    error.status = 403;
+    throw error;
+  }
+
+  // Check whether user is registered
+  const isRegistered = event.attendees.some(
+    (attendee) => attendee.toString() === userId.toString(),
+  );
+
+  if (!isRegistered) {
+    const error = new Error("User is not registered for this event");
+    error.status = 404;
+    throw error;
+  }
+
+  event.attendees = event.attendees.filter(
+    (attendee) => attendee.toString() !== userId.toString(),
+  );
+
+  await event.save();
+
+  return event;
+};

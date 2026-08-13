@@ -4,6 +4,7 @@ import {
   createEvent,
   getEvents,
   getEvent,
+  getMyEventsController,
   updateEvent,
   deleteEvent,
 } from "../controller/event.controller.js";
@@ -31,6 +32,14 @@ const validate = (schema) => (req, res, next) => {
 };
 
 router.get("/", getEvents);
+
+router.get(
+  "/my-events",
+  protect,
+  authorize("organizer"),
+  getMyEventsController,
+);
+
 router.get("/:id", getEvent);
 
 router.post(
@@ -40,6 +49,7 @@ router.post(
   validate(createEventSchema),
   createEvent,
 );
+
 router.put("/:id", protect, authorize("organizer", "admin"), updateEvent);
 router.delete("/:id", protect, authorize("organizer", "admin"), deleteEvent);
 
