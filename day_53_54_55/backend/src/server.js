@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.route.js";
 import adminRoutes from "./routes/admin.route.js";
 import carRoutes from "./routes/car.route.js";
 import rentalRoutes from "./routes/rental.route.js";
+import paymentRoutes from "./routes/payment.route.js";
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.get("/api/test-db", async (req, res) => {
 app.use("/api/admin", adminRoutes);
 app.use("/api/cars", carRoutes);
 app.use("/api/rentals", rentalRoutes);
+app.use("/api/payment", paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

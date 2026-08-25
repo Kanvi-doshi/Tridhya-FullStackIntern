@@ -1,6 +1,5 @@
 import pool from "../components/config/db.js";
 
-/*Create a rental*/
 export const createRental = async ({
   user_id,
   car_id,
@@ -26,7 +25,7 @@ export const createRental = async ({
   return result.insertId;
 };
 
-/*Find car by ID*/
+// FIND CAR
 export const findCarById = async (carId) => {
   const [cars] = await pool.query(
     `
@@ -40,7 +39,7 @@ export const findCarById = async (carId) => {
   return cars[0];
 };
 
-/*Check whether the car has an overlapping rental*/
+// CHECK RENTAL OVERLAP
 export const checkRentalOverlap = async (carId, startDate, endDate) => {
   const [rentals] = await pool.query(
     `
@@ -57,7 +56,8 @@ export const checkRentalOverlap = async (carId, startDate, endDate) => {
   return rentals.length > 0;
 };
 
-/* Get all rentals of a particular user*/
+// GET MY RENTALS
+
 export const getUserRentals = async (userId) => {
   const [rentals] = await pool.query(
     `
@@ -89,46 +89,8 @@ export const getUserRentals = async (userId) => {
   return rentals;
 };
 
-/* Get rental by ID*/
-export const getRentalById = async (rentalId) => {
-  const [rentals] = await pool.query(
-    `
-    SELECT
-      r.rental_id,
-      r.user_id,
-      r.car_id,
-      r.start_date,
-      r.end_date,
-      r.total_amount,
-      r.status,
-      r.created_at,
-
-      u.first_name,
-      u.last_name,
-      u.email,
-
-      c.brand,
-      c.model,
-      c.registration_number
-
-    FROM rentals r
-
-    JOIN users u
-      ON r.user_id = u.user_id
-
-    JOIN cars c
-      ON r.car_id = c.car_id
-
-    WHERE r.rental_id = ?
-    `,
-    [rentalId],
-  );
-
-  return rentals[0];
-};
-
-/* Get all rentals
-  Admin / Staff*/
+// GET ALL RENTALS
+// ADMIN / STAFF
 
 export const getAllRentals = async () => {
   const [rentals] = await pool.query(
@@ -166,7 +128,54 @@ export const getAllRentals = async () => {
   return rentals;
 };
 
-/* Update rental status*/
+// GET RENTAL HISTORY
+// CUSTOMER
+
+export const getRentalHistory = async (userId, status) => {
+  let query = `
+    SELECT
+      r.rental_id,
+      r.start_date,
+      r.end_date,
+      r.total_amount,
+      r.status,
+      r.created_at,
+
+      c.car_id,
+      c.brand,
+      c.model,
+      c.registration_number,
+
+      p.payment_method,
+      p.payment_status,
+      p.paid_at
+
+    FROM rentals r
+
+    JOIN cars c
+      ON r.car_id = c.car_id
+
+    LEFT JOIN payments p
+      ON r.rental_id = p.rental_id
+
+    WHERE r.user_id = ?
+  `;
+
+  const params = [userId];
+
+  if (status) {
+    query += ` AND r.status = ?`;
+    params.push(status);
+  }
+
+  query += ` ORDER BY r.created_at DESC`;
+
+  const [rentals] = await pool.query(query, params);
+
+  return rentals;
+};
+
+// UPDATE RENTAL STATUS
 export const updateRentalStatus = async (rentalId, status) => {
   const [result] = await pool.query(
     `
@@ -180,7 +189,7 @@ export const updateRentalStatus = async (rentalId, status) => {
   return result;
 };
 
-/*Update car status*/
+// UPDATE CAR STATUS
 export const updateCarStatus = async (carId, status) => {
   const [result] = await pool.query(
     `
@@ -194,7 +203,7 @@ export const updateCarStatus = async (carId, status) => {
   return result;
 };
 
-/*Cancel rental*/
+// CANCEL RENTAL
 export const cancelRental = async (rentalId) => {
   const [result] = await pool.query(
     `

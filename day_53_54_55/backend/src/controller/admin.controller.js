@@ -4,20 +4,19 @@ import {
   findRoleById,
   updateUserRole,
   deleteUser,
-//   findCarByRegistration,
+  getDashboardStats,
+  getRentalAnalytics,
 } from "../service/admin.service.js";
 
 export const getUsers = async (req, res) => {
   try {
     const users = await getAllUsers();
-
     res.status(200).json({
       message: "Users fetched successfully",
       users,
     });
   } catch (error) {
     console.error("Get users error:", error);
-
     res.status(500).json({
       message: "Server error",
     });
@@ -27,7 +26,6 @@ export const getUsers = async (req, res) => {
 export const getUser = async (req, res) => {
   try {
     const { id } = req.params;
-
     const user = await getUserById(id);
 
     if (!user) {
@@ -98,9 +96,7 @@ export const changeUserRole = async (req, res) => {
 export const removeUser = async (req, res) => {
   try {
     const { id } = req.params;
-
     const user = await getUserById(id);
-
     if (!user) {
       return res.status(404).json({
         message: "User not found",
@@ -108,12 +104,44 @@ export const removeUser = async (req, res) => {
     }
 
     await deleteUser(id);
-
     res.status(200).json({
       message: "User deleted successfully",
     });
   } catch (error) {
     console.error("Delete user error:", error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+export const getDashboard = async (req, res) => {
+  try {
+    const dashboard = await getDashboardStats();
+
+    res.status(200).json({
+      message: "Admin dashboard fetched successfully",
+      dashboard,
+    });
+  } catch (error) {
+    console.error("Admin dashboard error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+export const getAnalytics = async (req, res) => {
+  try {
+    const analytics = await getRentalAnalytics();
+
+    res.status(200).json({
+      message: "Analytics fetched successfully",
+      analytics,
+    });
+  } catch (error) {
+    console.error("Analytics error:", error);
 
     res.status(500).json({
       message: "Server error",

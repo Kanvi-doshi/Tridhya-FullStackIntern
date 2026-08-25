@@ -3,14 +3,16 @@ import {
   findCarById,
   checkRentalOverlap,
   getUserRentals,
-  getRentalById,
   getAllRentals,
+  getRentalHistory,
   updateRentalStatus,
   updateCarStatus,
   cancelRental,
 } from "../service/rental.service.js";
 
+// ==========================================
 // CREATE RENTAL
+// ==========================================
 
 export const create = async (req, res) => {
   try {
@@ -18,14 +20,12 @@ export const create = async (req, res) => {
 
     const user_id = req.user.user_id;
 
-    // Validate required fields
     if (!car_id || !start_date || !end_date) {
       return res.status(400).json({
         message: "Car, start date and end date are required",
       });
     }
 
-    // Validate dates
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
 
@@ -41,7 +41,6 @@ export const create = async (req, res) => {
       });
     }
 
-    // Find car
     const car = await findCarById(car_id);
 
     if (!car) {
@@ -50,14 +49,12 @@ export const create = async (req, res) => {
       });
     }
 
-    // Check car status
     if (car.status !== "Available") {
       return res.status(400).json({
         message: "Car is currently not available",
       });
     }
 
-    // Check overlapping rentals
     const hasOverlap = await checkRentalOverlap(car_id, start_date, end_date);
 
     if (hasOverlap) {
@@ -66,15 +63,12 @@ export const create = async (req, res) => {
       });
     }
 
-    // Calculate number of days
     const millisecondsPerDay = 1000 * 60 * 60 * 24;
 
     const numberOfDays = Math.ceil((endDate - startDate) / millisecondsPerDay);
 
-    // Calculate total amount
     const total_amount = Number(car.daily_rate) * numberOfDays;
 
-    // Create rental
     const rentalId = await createRental({
       user_id,
       car_id,
@@ -83,11 +77,11 @@ export const create = async (req, res) => {
       total_amount,
     });
 
-    // Update car status
     await updateCarStatus(car_id, "Rented");
 
     res.status(201).json({
       message: "Rental created successfully",
+
       rental: {
         rental_id: rentalId,
         user_id,
@@ -110,7 +104,6 @@ export const create = async (req, res) => {
 };
 
 // GET MY RENTALS
-
 export const getMyRentals = async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -130,45 +123,8 @@ export const getMyRentals = async (req, res) => {
   }
 };
 
-// GET SINGLE RENTAL
-
-export const getRental = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const rental = await getRentalById(id);
-
-    if (!rental) {
-      return res.status(404).json({
-        message: "Rental not found",
-      });
-    }
-
-    // Customer can only view their own rental
-    if (
-      req.user.role_name === "Customer" &&
-      rental.user_id !== req.user.user_id
-    ) {
-      return res.status(403).json({
-        message: "You are not allowed to view this rental",
-      });
-    }
-
-    res.status(200).json({
-      message: "Rental fetched successfully",
-      rental,
-    });
-  } catch (error) {
-    console.error("Get rental error:", error);
-
-    res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
 // GET ALL RENTALS
-
+// ADMIN / STAFF
 export const getRentals = async (req, res) => {
   try {
     const rentals = await getAllRentals();
@@ -186,11 +142,50 @@ export const getRentals = async (req, res) => {
   }
 };
 
-// UPDATE RENTAL STATUS
 
+// GET RENTAL HISTORY
+export const getHistory = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    const { status } = req.query;
+
+    const allowedStatuses = [
+      "Pending",
+      "Confirmed",
+      "Active",
+      "Completed",
+      "Cancelled",
+    ];
+
+    if (status && !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid rental status",
+      });
+    }
+
+    const rentals = await getRentalHistory(userId, status);
+
+    res.status(200).json({
+      message: "Rental history fetched successfully",
+      count: rentals.length,
+      rentals,
+    });
+  } catch (error) {
+    console.error("Get rental history error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+// UPDATE RENTAL STATUS
+// ADMIN / STAFF
 export const changeRentalStatus = async (req, res) => {
   try {
     const { id } = req.params;
+
     const { status } = req.body;
 
     const allowedStatuses = [
@@ -213,29 +208,11 @@ export const changeRentalStatus = async (req, res) => {
       });
     }
 
-    const rental = await getRentalById(id);
-
-    if (!rental) {
-      return res.status(404).json({
-        message: "Rental not found",
-      });
-    }
-
     await updateRentalStatus(id, status);
-
-    // If rental is completed or cancelled,
-    // make the car available again.
-    if (status === "Completed" || status === "Cancelled") {
-      await updateCarStatus(rental.car_id, "Available");
-    }
-
-    // If rental becomes active, mark car as rented
-    if (status === "Active") {
-      await updateCarStatus(rental.car_id, "Rented");
-    }
 
     res.status(200).json({
       message: "Rental status updated successfully",
+
       rental_id: Number(id),
       status,
     });
@@ -249,12 +226,16 @@ export const changeRentalStatus = async (req, res) => {
 };
 
 // CANCEL RENTAL
-
+// CUSTOMER
 export const cancel = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const rental = await getRentalById(id);
+    const userId = req.user.user_id;
+
+    const rentals = await getUserRentals(userId);
+
+    const rental = rentals.find((item) => item.rental_id === Number(id));
 
     if (!rental) {
       return res.status(404).json({
@@ -262,17 +243,6 @@ export const cancel = async (req, res) => {
       });
     }
 
-    // Customer can cancel only their own rental
-    if (
-      req.user.role_name === "Customer" &&
-      rental.user_id !== req.user.user_id
-    ) {
-      return res.status(403).json({
-        message: "You are not allowed to cancel this rental",
-      });
-    }
-
-    // Don't cancel already completed rental
     if (rental.status === "Completed") {
       return res.status(400).json({
         message: "Completed rental cannot be cancelled",

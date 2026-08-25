@@ -10,11 +10,31 @@ import {
 
 export const getCars = async (req, res) => {
   try {
-    const cars = await getAllCars();
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      brand,
+      status,
+      minPrice,
+      maxPrice,
+      sort,
+    } = req.query;
+
+    const cars = await getAllCars({
+      page: Number(page),
+      limit: Number(limit),
+      search,
+      brand,
+      status,
+      minPrice,
+      maxPrice,
+      sort,
+    });
 
     res.status(200).json({
       message: "Cars fetched successfully",
-      cars,
+      ...cars,
     });
   } catch (error) {
     console.error("Get cars error:", error);
