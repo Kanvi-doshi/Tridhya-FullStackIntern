@@ -85,6 +85,31 @@ export const getDashboardStats = async () => {
     FROM cars
   `);
 
+  const [mostRented] = await pool.query(`
+    SELECT
+      c.car_id,
+      c.brand,
+      c.model,
+      c.registration_number,
+      COUNT(
+      CASE
+        WHEN r.status <> 'Cancelled'
+        THEN r.rental_id
+      END
+    ) AS rental_count
+     
+    FROM cars c
+    LEFT JOIN rentals r
+      ON c.car_id = r.car_id
+    GROUP BY
+      c.car_id,
+      c.brand,
+      c.model,
+      c.registration_number
+    ORDER BY rental_count DESC
+    LIMIT 1
+  `);
+
   const [rentals] = await pool.query(`
     SELECT
       COUNT(*) AS total_rentals,
@@ -103,6 +128,12 @@ export const getDashboardStats = async () => {
     WHERE status = 'Completed'
   `);
 
+  const [bookedSlots] = await pool.query(`
+    SELECT COUNT(*) AS booked_slots
+    FROM rentals
+    WHERE status IN ('Pending', 'Confirmed', 'Active')
+  `);
+
   const [payments] = await pool.query(`
     SELECT
       COUNT(*) AS total_payments
@@ -116,6 +147,8 @@ export const getDashboardStats = async () => {
     rentals: rentals[0],
     revenue: revenue[0],
     payments: payments[0],
+    bookedSlots: Number(bookedSlots[0].booked_slots || 0),
+    mostRentedCar: mostRented[0] || null,
   };
 };
 

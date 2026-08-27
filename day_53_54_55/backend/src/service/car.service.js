@@ -16,24 +16,24 @@ export const getAllCars = async ({
   const countValues = [];
 
   if (search) {
-    query += `AND ( brand LIKE ? OR model LIKE? OR registertion_number LIKE?)`;
-    countQuery += `AND ( brand LIKE ? OR model LIKE? OR registertion_number LIKE?) `;
+    query += `AND ( brand LIKE ? OR model LIKE? OR registration_number LIKE?)`;
+    countQuery += `AND ( brand LIKE ? OR model LIKE? OR registration_number LIKE?) `;
     const keyword = `%${search}%`;
 
     values.push(keyword, keyword, keyword);
-    countQuery.push(keyword, keyword, keyword);
+    countValues.push(keyword, keyword, keyword);
   }
   if (brand) {
     query += `AND brand = ?`;
     countQuery += `AND brand =?`;
     values.push(brand);
-    countQuery.push(brand);
+    countValues.push(brand);
   }
   if (status) {
     query += `AND status = ?`;
     countQuery += `AND status =?`;
     values.push(status);
-    countQuery.push(status);
+    countValues.push(status);
   }
   if (minPrice) {
     query += ` AND daily_rate >= ?`;

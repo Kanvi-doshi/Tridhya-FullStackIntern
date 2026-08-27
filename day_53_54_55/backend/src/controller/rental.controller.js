@@ -8,11 +8,9 @@ import {
   updateRentalStatus,
   updateCarStatus,
   cancelRental,
+  getCustomerDashboardStats,
 } from "../service/rental.service.js";
 
-// ==========================================
-// CREATE RENTAL
-// ==========================================
 
 export const create = async (req, res) => {
   try {
@@ -225,8 +223,27 @@ export const changeRentalStatus = async (req, res) => {
   }
 };
 
-// CANCEL RENTAL
 // CUSTOMER
+// dashboard stats
+export const getDashboardStats = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    const stats = await getCustomerDashboardStats(userId);
+
+    res.status(200).json({
+      message: "Customer dashboard stats fetched successfully",
+      stats,
+    });
+  } catch (error) {
+    console.error("Customer dashboard stats error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+// CANCEL RENTAL
 export const cancel = async (req, res) => {
   try {
     const { id } = req.params;

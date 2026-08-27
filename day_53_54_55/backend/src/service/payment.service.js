@@ -146,10 +146,12 @@ export const getAllPayments = async () => {
       u.first_name,
       u.last_name,
       u.email,
+      u.phone,
 
       c.car_id,
       c.brand,
-      c.model
+      c.model,
+      c.registration_number
 
     FROM payments p
 

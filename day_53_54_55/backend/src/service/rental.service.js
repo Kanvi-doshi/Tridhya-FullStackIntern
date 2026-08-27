@@ -72,12 +72,19 @@ export const getUserRentals = async (userId) => {
       c.car_id,
       c.brand,
       c.model,
-      c.registration_number
+      c.registration_number,
+
+      p.payment_method,
+      COALESCE(p.payment_status, 'Pending') AS payment_status,
+      p.paid_at
 
     FROM rentals r
 
     JOIN cars c
       ON r.car_id = c.car_id
+    
+    LEFT JOIN payments p
+      ON r.rental_id = p.rental_id
 
     WHERE r.user_id = ?
 
@@ -107,11 +114,16 @@ export const getAllRentals = async () => {
       u.first_name,
       u.last_name,
       u.email,
+      u.phone,
 
       c.car_id,
       c.brand,
       c.model,
-      c.registration_number
+      c.registration_number,
+
+      p.payment_method,
+      COALESCE(p.payment_status, 'Pending') AS payment_status,
+      p.paid_at
 
     FROM rentals r
 
@@ -120,6 +132,10 @@ export const getAllRentals = async () => {
 
     JOIN cars c
       ON r.car_id = c.car_id
+
+    LEFT JOIN payments p
+      ON r.rental_id = p.rental_id
+
 
     ORDER BY r.created_at DESC
     `,
@@ -147,7 +163,7 @@ export const getRentalHistory = async (userId, status) => {
       c.registration_number,
 
       p.payment_method,
-      p.payment_status,
+      COALESCE(p.payment_status, 'Pending') AS payment_status,
       p.paid_at
 
     FROM rentals r
@@ -205,6 +221,21 @@ export const updateCarStatus = async (carId, status) => {
 
 // CANCEL RENTAL
 export const cancelRental = async (rentalId) => {
+  // Check payment status
+  const [payments] = await pool.query(
+    `
+    SELECT payment_status
+    FROM payments
+    WHERE rental_id = ?
+    `,
+    [rentalId],
+  );
+
+  // Prevent cancellation if payment is completed
+  if (payments.length > 0 && payments[0].payment_status === "Completed") {
+    throw new Error("Cannot cancel rental after payment is completed");
+  }
+
   const [result] = await pool.query(
     `
     UPDATE rentals
@@ -215,4 +246,48 @@ export const cancelRental = async (rentalId) => {
   );
 
   return result;
+};
+
+// CUSTOMER DASHBOARD STATS
+export const getCustomerDashboardStats = async (userId) => {
+  const [stats] = await pool.query(
+    `
+    SELECT
+      SUM(r.status = 'Active') AS active_rentals,
+
+      SUM(
+        r.status IN ('Pending', 'Confirmed')
+        AND r.start_date > NOW()
+      ) AS upcoming_rentals,
+
+      SUM(r.status = 'Pending') AS pending_rentals
+
+    FROM rentals r
+    WHERE r.user_id = ?
+    `,
+    [userId],
+  );
+
+  const [payments] = await pool.query(
+    `
+    SELECT
+      COALESCE(SUM(p.amount), 0) AS total_payments
+
+    FROM payments p
+
+    JOIN rentals r
+      ON p.rental_id = r.rental_id
+
+    WHERE r.user_id = ?
+      AND p.payment_status = 'Completed'
+    `,
+    [userId],
+  );
+
+  return {
+    activeRentals: Number(stats[0].active_rentals || 0),
+    upcomingRentals: Number(stats[0].upcoming_rentals || 0),
+    pendingRentals: Number(stats[0].pending_rentals || 0),
+    totalPayments: Number(payments[0].total_payments || 0),
+  };
 };
