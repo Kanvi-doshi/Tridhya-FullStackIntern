@@ -5,6 +5,7 @@ import { AppDataSource } from "../lib/config/db";
 import { Application, ApplicationStatus } from "../lib/entity/Application";
 import { Job, JobStatus } from "../lib/entity/Job";
 import { User } from "../lib/entity/User";
+import { getIO } from "../lib/config/socket";
 import { AppError } from "../lib/middleware/error.middleware";
 import { parseResume } from "../lib/utils/resumeParser";
 import { analyzeResumeWithAI } from "../lib/services/resumeAi.services";
@@ -189,6 +190,13 @@ export const updateApplicationStatus = async (
 
     application.status = status;
     await applicationRepository.save(application);
+
+    getIO()
+      .to(`candidate:${application.candidate.id}`)
+      .emit("application:statusChanged", {
+        applicationId: application.id,
+        status: application.status,
+      });
     return res.status(200).json({
       success: true,
       message: "Application status updated successfully",

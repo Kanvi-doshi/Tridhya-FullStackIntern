@@ -23,6 +23,8 @@ import {
 
 const router = Router();
 
+router.get("/", protect, authorize(UserRole.HR), getAllInterviewAssignments);
+
 router.post(
   "/application/:applicationId/round/:roundId",
   protect,
@@ -51,5 +53,6 @@ router.patch(
   validate(updateInterviewAssignmentSchema),
   updateInterviewAssignment,
 );
+
 
 export default router;

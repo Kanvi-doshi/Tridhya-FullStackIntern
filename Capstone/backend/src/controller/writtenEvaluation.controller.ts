@@ -6,6 +6,7 @@ import { QuestionType } from "../lib/entity/Questions";
 import { AppError } from "../lib/middleware/error.middleware";
 import { evaluateAssessment } from "../lib/utils/evaluateAssessment";
 import { evaluateWrittenWithAI } from "../lib/services/writtenAi.services";
+import { getIO } from "../lib/config/socket";
 
 const answerRepository = AppDataSource.getRepository(Answer);
 const attemptRepository = AppDataSource.getRepository(AssessmentAttempt);
@@ -29,7 +30,8 @@ export const evaluateWrittenManually = async (
       relations: {
         question: true,
         attempt: {
-          round: true,
+            round: true,
+            application:true,
         },
       },
     });
@@ -56,6 +58,15 @@ export const evaluateWrittenManually = async (
 
     const result = await evaluateAssessment(answer.attempt);
     await attemptRepository.save(answer.attempt);
+
+    getIO().to("hr").emit("assessment:evaluated", {
+      attemptId: answer.attempt.id,
+      applicationId: answer.attempt.application?.id,
+      status: answer.attempt.status,
+      score: answer.attempt.score,
+      obtainedMarks: answer.attempt.obtainedMarks,
+      totalMarks: answer.attempt.totalMarks,
+    });
 
     return res.status(200).json({
       success: true,
@@ -86,7 +97,8 @@ export const evaluateWrittenWithAIController = async (
       relations: {
         question: true,
         attempt: {
-          round: true,
+            round: true,
+            application:true,
         },
       },
     });
@@ -116,6 +128,15 @@ export const evaluateWrittenWithAIController = async (
     const result = await evaluateAssessment(answer.attempt);
     await attemptRepository.save(answer.attempt);
 
+    getIO().to("hr").emit("assessment:evaluated", {
+      attemptId: answer.attempt.id,
+      applicationId: answer.attempt.application?.id,
+      status: answer.attempt.status,
+      score: answer.attempt.score,
+      obtainedMarks: answer.attempt.obtainedMarks,
+      totalMarks: answer.attempt.totalMarks,
+    });
+      
     return res.status(200).json({
       success: true,
       message: "Written answer evaluated by AI successfully",

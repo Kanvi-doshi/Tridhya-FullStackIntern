@@ -13,6 +13,8 @@ import interviewFeedbackRoutes from "./routes/interviewFeedback.routes";
 import rankingRoutes from "./routes/raking.routes";
 import candidateAiRoutes from "./routes/candidateAi.routes";
 import reportRoutes from "./routes/report.routes";
+import writtenEvaluationRoutes from "./routes/writtenEvaluation.routes";
+import hrRoutes from "./routes/hr.routes";
 
 const app = express();
 
@@ -29,7 +31,9 @@ app.use("/api/interview-assignment", interviewAssignmentRoutes);
 app.use("/api/interview-feedback", interviewFeedbackRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/candidate-ai", candidateAiRoutes);
+app.use("/api/written-evaluation", writtenEvaluationRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/hr", hrRoutes);
 
 app.use(errorHandler);
 

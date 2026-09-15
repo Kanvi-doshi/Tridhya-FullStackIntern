@@ -15,6 +15,7 @@ import {
   isAssessmentExpired,
 } from "../lib/utils/assessmentTimer";
 import { evaluateAssessment } from "../lib/utils/evaluateAssessment";
+import { getIO } from "../lib/config/socket";
 import { AppError } from "../lib/middleware/error.middleware";
 
 const attemptRepository = AppDataSource.getRepository(AssessmentAttempt);
@@ -33,6 +34,17 @@ const autoSubmitIfExpired = async (attempt: AssessmentAttempt) => {
 
   await evaluateAssessment(attempt, true);
   await attemptRepository.save(attempt);
+
+  getIO().to("hr").emit("assessment:submitted", {
+    applicationId: attempt.application?.id,
+    attemptId: attempt.id,
+    roundId: attempt.round?.id,
+    status: attempt.status,
+    score: attempt.score,
+    autoSubmitted: true,
+    submittedAt: attempt.submittedAt,
+  });
+
   return true;
 };
 
@@ -130,6 +142,17 @@ export const startAssessment = async (
     const deadline = getAssessmentDeadline(attempt);
     const remainingSeconds = getRemainingSeconds(attempt);
 
+    getIO().to("hr").emit("assessment:started", {
+      candidateId,
+      applicationId: application.id,
+      attemptId: attempt.id,
+      roundId: round.id,
+      roundTitle: round.title,
+      jobId: round.job.id,
+      status: attempt.status,
+      startedAt: attempt.startedAt,
+    });
+
     return res.status(201).json({
       success: true,
       message: "Assessment started successfully",
@@ -166,6 +189,7 @@ export const getAssessment = async (
       },
       relations: {
         round: true,
+        application: true,
       },
     });
 
@@ -248,6 +272,7 @@ export const saveAnswer = async (
       },
       relations: {
         round: true,
+        application: true,
       },
     });
 
@@ -335,6 +360,7 @@ export const submitAssessment = async (
       },
       relations: {
         round: true,
+        application: true,
       },
     });
     if (!attempt) {
@@ -348,6 +374,18 @@ export const submitAssessment = async (
     const result = await evaluateAssessment(attempt, autoSubmit);
 
     await attemptRepository.save(attempt);
+
+    getIO().to("hr").emit("assessment:submitted", {
+      candidateId,
+      applicationId: attempt.application.id,
+      attemptId: attempt.id,
+      roundId: attempt.round.id,
+      status: attempt.status,
+      score: attempt.score,
+      autoSubmitted: attempt.autoSubmitted,
+      submittedAt: attempt.submittedAt,
+    });
+
     return res.status(200).json({
       success: true,
       message: autoSubmit
@@ -383,6 +421,7 @@ export const getAssessmentResult = async (
       },
       relations: {
         round: true,
+        application: true,
       },
     });
 
