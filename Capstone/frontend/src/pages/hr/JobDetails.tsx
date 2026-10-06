@@ -136,23 +136,20 @@ const HRJobDetails = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-6 py-5 sm:flex-row sm:items-center">
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-6 py-6 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/job")}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-violet-600"
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-violet-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-50 hover:shadow-md"
             >
               <ArrowLeft size={18} />
             </button>
 
             <div>
-              <h1 className="text-xl font-bold text-slate-800">Job Details</h1>
+              <h1 className="text-2xl font-bold ">Job Details</h1>
 
-              <p className="text-sm text-slate-400">
-                View and manage this position
-              </p>
+              <p className="text-sm">View and manage this position</p>
             </div>
           </div>
 
@@ -179,7 +176,6 @@ const HRJobDetails = () => {
       </div>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-
         <div className="rounded-2xl border border-slate-200 bg-white p-7">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
             <div className="flex items-start gap-4">

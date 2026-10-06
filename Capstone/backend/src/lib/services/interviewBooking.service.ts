@@ -75,9 +75,7 @@ export async function saveInterviewBooking(
         return assignments.save(assignment);
       }
     } else {
-      const application = await manager.getRepository(
-        Application,
-      ).findOne({
+      const application = await manager.getRepository(Application).findOne({
         where: { id: target.applicationId },
         relations: { job: true, candidate: true },
       });

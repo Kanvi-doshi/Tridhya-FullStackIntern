@@ -5,8 +5,11 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock3,
+  Copy,
   MapPin,
+  ExternalLink,
   Sparkles,
+  X,
 } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +42,7 @@ interface Application {
 interface Interview {
   id: string;
   scheduledAt: string;
+  endsAt: string | null;
   location: string;
   status: string;
 
@@ -118,7 +122,9 @@ const AssessmentStatus = ({ jobId }: { jobId: string }) => {
     };
 
     fetchAssessmentStatus();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [jobId, revision]);
 
   if (loading || rounds.length === 0) {
@@ -236,7 +242,6 @@ const AssessmentStatus = ({ jobId }: { jobId: string }) => {
   return null;
 };
 
-
 const CandidateDash = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -244,6 +249,11 @@ const CandidateDash = () => {
 
   const [applications, setApplications] = useState<Application[]>([]);
   const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [selectedInterview, setSelectedInterview] = useState<Interview | null>(
+    null,
+  );
+  const [copiedMeetingCode, setCopiedMeetingCode] = useState(false);
+  const [copyError, setCopyError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -275,7 +285,9 @@ const CandidateDash = () => {
     };
 
     fetchDashboard();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [revision]);
 
   const totalApplications = applications.length;
@@ -548,9 +560,15 @@ const CandidateDash = () => {
             ) : (
               <div className="space-y-4">
                 {upcomingInterviews.map((interview) => (
-                  <div
+                  <button
                     key={interview.id}
-                    className="rounded-xl bg-violet-50 p-4"
+                    type="button"
+                    onClick={() => {
+                      setSelectedInterview(interview);
+                      setCopiedMeetingCode(false);
+                      setCopyError("");
+                    }}
+                    className="block w-full rounded-xl bg-violet-50 p-4 text-left transition hover:bg-violet-100"
                   >
                     <p className="font-semibold text-slate-700">
                       {interview.application?.job?.title || "Interview"}
@@ -564,7 +582,6 @@ const CandidateDash = () => {
 
                     <div className="mt-3 flex items-start gap-2 text-sm text-slate-500">
                       <CalendarDays size={15} className="mt-0.5 shrink-0" />
-
                       <span>
                         {new Date(interview.scheduledAt).toLocaleString()}
                       </span>
@@ -572,20 +589,170 @@ const CandidateDash = () => {
 
                     <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
                       <MapPin size={15} className="shrink-0" />
-
-                      <span>{interview.location}</span>
+                      <span className="break-all">{interview.location}</span>
                     </div>
 
                     <span className="mt-3 inline-block rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
                       {interview.status}
                     </span>
-                  </div>
+
+                    <span className="mt-3 block text-sm font-semibold text-violet-700">
+                      View interview details
+                    </span>
+                  </button>
                 ))}
               </div>
             )}
           </div>
         </div>
       </main>
+      {selectedInterview &&
+        (() => {
+          const meetingCode = selectedInterview.location
+            .match(/(?:meet\.google\.com\/)?([a-z]{3}-[a-z]{4}-[a-z]{3})/i)?.[1]
+            ?.toLowerCase();
+
+          const googleMeetUrl = selectedInterview.location.match(
+            /https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}/i,
+          )?.[0];
+
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setSelectedInterview(null)}
+            >
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="interview-modal-title"
+                className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-violet-600">
+                      Upcoming interview
+                    </p>
+                    <h2
+                      id="interview-modal-title"
+                      className="mt-1 text-xl font-bold text-slate-800"
+                    >
+                      {selectedInterview.application?.job?.title || "Interview"}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {selectedInterview.round?.name}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Close interview details"
+                    onClick={() => setSelectedInterview(null)}
+                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <p className="text-xs font-medium uppercase text-slate-400">
+                      Starts
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">
+                      {new Date(selectedInterview.scheduledAt).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {selectedInterview.endsAt && (
+                    <div>
+                      <p className="text-xs font-medium uppercase text-slate-400">
+                        Ends
+                      </p>
+                      <p className="mt-1 text-sm text-slate-700">
+                        {new Date(selectedInterview.endsAt).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="text-xs font-medium uppercase text-slate-400">
+                      Interviewer
+                    </p>
+                    <p className="mt-1 text-sm text-slate-700">
+                      {selectedInterview.interviewer?.name || "Not provided"}
+                    </p>
+                    {selectedInterview.interviewer?.email && (
+                      <p className="text-sm text-slate-500">
+                        {selectedInterview.interviewer.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase text-slate-400">
+                      Meeting details
+                    </p>
+                    <p className="mt-1 break-all text-sm text-slate-700">
+                      {selectedInterview.location}
+                    </p>
+                  </div>
+
+                  {meetingCode && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-4">
+                      <div>
+                        <p className="text-xs text-slate-500">
+                          Google Meet code
+                        </p>
+                        <code className="mt-1 block font-semibold text-slate-800">
+                          {meetingCode}
+                        </code>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(meetingCode);
+                            setCopiedMeetingCode(true);
+                            setCopyError("");
+                          } catch {
+                            setCopiedMeetingCode(false);
+                            setCopyError(
+                              "Could not copy the code. Please copy it manually.",
+                            );
+                          }
+                        }}
+                        className="flex items-center gap-2 rounded-lg border border-violet-200 px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50"
+                      >
+                        <Copy size={15} />
+                        {copiedMeetingCode ? "Copied" : "Copy code"}
+                      </button>
+
+                      {copyError && (
+                        <p role="alert" className="w-full text-sm text-red-600">
+                          {copyError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {googleMeetUrl && (
+                    <a
+                      href={googleMeetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700"
+                    >
+                      Join Google Meet
+                      <ExternalLink size={15} />
+                    </a>
+                  )}
+                </div>
+              </section>
+            </div>
+          );
+        })()}
     </div>
   );
 };

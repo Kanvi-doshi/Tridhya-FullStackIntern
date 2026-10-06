@@ -40,7 +40,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-400 to-violet-500 flex items-center justify-center p-5">
-      <div className="w-full max-w-5xl min-h-[620px] bg-white rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
+      <div className="w-full max-w-4xl min-h-[520px] bg-white rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
         <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-500 p-14 text-white">
           {/* organic blob shapes */}
           <div className="pointer-events-none absolute -top-16 -left-24 h-72 w-72 rotate-12 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-white/10 blur-sm" />

@@ -157,14 +157,14 @@ export default function ScheduleInterviewForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="interview-form-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-slate-200 bg-white px-6 py-4">
           <h2
             id="interview-form-title"
             className="text-lg font-bold text-slate-800"
@@ -183,10 +183,13 @@ export default function ScheduleInterviewForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5">
+        <form
+          onSubmit={handleSubmit}
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-5"
+        >
           <fieldset disabled={saving} className="space-y-4">
             {assignment ? (
-              <div className="rounded-xl bg-slate-50 p-4 text-sm">
+              <div className="rounded-xl bg-slate-50 p-3 text-sm">
                 <p className="font-semibold text-slate-800">
                   {assignment.application?.candidate?.name ?? "Candidate"}
                 </p>
@@ -333,15 +336,8 @@ export default function ScheduleInterviewForm({
               </p>
             )}
 
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm"
-              >
-                Close
-              </button>
-
+            <div className="flex justify-end ">
+             
               <button
                 type="submit"
                 disabled={

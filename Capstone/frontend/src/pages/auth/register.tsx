@@ -36,7 +36,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-400 to-violet-500 flex items-center justify-center p-5">
-      <div className="w-full max-w-5xl min-h-[620px] bg-white rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
+      <div className="w-full max-w-4xl min-h-[420px] bg-white rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
         <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-500 p-14 text-white">
           {/* organic blob shapes */}
           <div className="pointer-events-none absolute -top-16 -left-24 h-72 w-72 rotate-12 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-white/10 blur-sm" />
@@ -89,7 +89,7 @@ const Register = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <input
                 type="text"
                 placeholder="Full Name"
@@ -131,7 +131,7 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-3 w-full rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90 disabled:opacity-50"
+                className="mt-2 w-full rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-md transition hover:opacity-90 disabled:opacity-50"
               >
                 {loading ? "Creating account..." : "Sign Up"}
               </button>

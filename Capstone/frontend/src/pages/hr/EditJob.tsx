@@ -125,29 +125,29 @@ const EditJob = () => {
     <div className="min-h-screen bg-slate-50">
       {/* HEADER */}
 
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-6 py-8">
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-6">
           <button
             type="button"
             onClick={() => navigate(`/job/${id}`)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-violet-600"
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-violet-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-50 hover:shadow-md"
           >
             <ArrowLeft size={18} />
           </button>
 
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Edit Job</h1>
+            <h1 className="text-2xl font-bold">Edit Job</h1>
 
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-violet-100">
               Update position information and requirements
             </p>
           </div>
         </div>
       </div>
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-6 py-4">
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -156,7 +156,7 @@ const EditJob = () => {
           onSubmit={handleSubmit}
           className="rounded-2xl border border-slate-200 bg-white p-7"
         >
-          <div className="mb-7 flex items-center gap-3 border-b border-slate-100 pb-5">
+          <div className="mb-2 flex items-center gap-3 border-slate-100 pb-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
               <BriefcaseBusiness size={21} />
             </div>
@@ -170,7 +170,7 @@ const EditJob = () => {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* TITLE */}
 
             <FormField label="Job Title" required>
@@ -231,7 +231,7 @@ const EditJob = () => {
 
           {/* SKILLS */}
 
-          <div className="mt-6">
+          <div className="mt-4">
             <FormField label="Required Skills" required>
               <input
                 type="text"
@@ -242,16 +242,12 @@ const EditJob = () => {
                 placeholder="React, Next.js, Node.js, TypeScript, PostgreSQL"
                 className={inputStyle}
               />
-
-              <p className="mt-2 text-xs text-slate-400">
-                Separate multiple skills using commas.
-              </p>
             </FormField>
           </div>
 
           {/* DESCRIPTION */}
 
-          <div className="mt-6">
+          <div className="mt-3">
             <FormField label="Job Description" required>
               <textarea
                 name="description"
@@ -267,7 +263,7 @@ const EditJob = () => {
 
           {/* BUTTONS */}
 
-          <div className="mt-8 flex flex-col-reverse justify-end gap-3 border-t border-slate-100 pt-6 sm:flex-row">
+          <div className="flex flex-col-reverse justify-end gap-3  border-slate-100 pt-3 sm:flex-row">
             <button
               type="button"
               onClick={() => navigate(`/job/${id}`)}
@@ -305,7 +301,7 @@ interface FormFieldProps {
 const FormField = ({ label, required, children }: FormFieldProps) => {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-700">
+      <label className="mb-1 block text-sm font-semibold text-slate-700">
         {label}
 
         {required && <span className="ml-1 text-red-500">*</span>}

@@ -133,7 +133,7 @@ const AssessmentResult = () => {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         {/* RESULT HERO */}
         <div className="rounded-2xl border border-slate-200 bg-white p-7 text-center">
           <div

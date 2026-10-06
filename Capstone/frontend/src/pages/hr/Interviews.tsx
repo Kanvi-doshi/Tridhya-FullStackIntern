@@ -325,7 +325,7 @@ const HRInterviews = () => {
             </button>
 
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-white">
                 Interview Management
               </h1>
 

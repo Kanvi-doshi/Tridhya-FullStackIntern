@@ -116,12 +116,12 @@ const HRJobs = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="bg-gradient-to-r from-violet-600 to-indigo-600">
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-6 py-6 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/dashboard")}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-violet-600 shadow-sm transition hover:bg-violet-50"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-violet-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-50 hover:shadow-md"
               title="Back to dashboard"
             >
               <ArrowLeft size={19} />

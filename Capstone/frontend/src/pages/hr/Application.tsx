@@ -272,7 +272,13 @@ const HRApplications = () => {
 
         <div>
           <div className="mb-4">
-            <h2 className="font-bold text-slate-800">Select Job</h2>{" "}
+            <div className="flex items-center gap-3">
+              <BriefcaseBusiness
+                size={32}
+                className="rounded-xl text-slate-700"
+              />
+              <h2 className="font-bold text-2xl text-slate-800">Select Job</h2>
+            </div>
             <p className="mt-1 text-sm text-slate-400">
               Choose a job to view its applications
             </p>

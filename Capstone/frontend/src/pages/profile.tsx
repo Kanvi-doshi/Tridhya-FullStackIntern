@@ -138,7 +138,7 @@ const Profile = () => {
       case "INTERVIEWER":
         return "Manage assigned interviews and candidate evaluations.";
       case "CANDIDATE":
-        return "Track applications, assessments and interview schedules.";
+        return "Track applications, assessments and  can view interview schedules.";
       default:
         return "SmartHire AI user account.";
     }
@@ -214,7 +214,7 @@ const Profile = () => {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-4xl py-2">
+      <main className="mx-auto max-w-6xl py-2">
         <div className="mb-3">
           <h2 className="text-2xl font-bold text-slate-800">Profile</h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -222,18 +222,18 @@ const Profile = () => {
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex h-15 w-15 items-center justify-center rounded-full border-3 border-white/30 bg-white text-3xl font-bold text-violet-600 shadow-sm">
+            <div className="flex flex-col gap-7 sm:flex-row sm:items-center">
+              <div className="ml-6 flex h-15 w-15 items-center justify-center rounded-full border-3 border-white/30 bg-white text-3xl font-bold text-violet-600 shadow-sm">
                 {profile.name?.charAt(0).toUpperCase()}
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className=" text-2xl font-bold text-white">
                   {profile.name}
                 </h2>
-                <p className="mt-1 text-sm text-violet-100">{profile.email}</p>
+
                 <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white">
                   {getRoleIcon()}
                   {getRoleLabel()}
@@ -242,11 +242,11 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="p-7">
+          <div className="p-5">
             <div className="grid gap-8 lg:grid-cols-3">
               {/* Personal information */}
               <div className="lg:col-span-2">
-                <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <h3 className="font-bold text-slate-800">
                       Personal Information
@@ -329,7 +329,7 @@ const Profile = () => {
                     <p className="mt-2 text-xs text-slate-500">
                       Use your updated email address the next time you log in.
                     </p>
-                    
+
                     {editError && (
                       <p role="alert" className="mt-3 text-sm text-red-600">
                         {editError}
@@ -374,21 +374,7 @@ const Profile = () => {
                     value={profile.email}
                   />
 
-                  <InfoCard
-                    icon={<BadgeCheck size={19} />}
-                    label="Account Role"
-                    value={getRoleLabel()}
-                  />
-
-                  <InfoCard
-                    icon={<CheckCircle2 size={19} />}
-                    label="Account Status"
-                    value={profile.isActive === false ? "Inactive" : "Active"}
-                  />
-                </div>
-
-                {profile.createdAt && (
-                  <div className="mt-4">
+                  {profile.createdAt && (
                     <InfoCard
                       icon={<CalendarDays size={19} />}
                       label="Member Since"
@@ -401,8 +387,15 @@ const Profile = () => {
                         },
                       )}
                     />
-                  </div>
-                )}
+                  )}
+
+                  <InfoCard
+                    icon={<CheckCircle2 size={19} />}
+                    label="Account Status"
+                    value={profile.isActive === false ? "Inactive" : "Active"}
+                  />
+                </div>
+
                 <button
                   onClick={handleLogout}
                   className=" mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-6 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
@@ -422,26 +415,18 @@ const Profile = () => {
                 </div>
 
                 <div className="rounded-xl bg-violet-50 p-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-white">
-                    {getRoleIcon()}
-                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center gap-5 rounded-xl bg-violet-600 text-white">
+                      {getRoleIcon()}
+                    </div>
 
-                  <h4 className="mt-4 font-bold text-slate-700">
-                    {getRoleLabel()}
-                  </h4>
+                    <h4 className="font-bold text-slate-700">
+                      {getRoleLabel()}
+                    </h4>
+                  </div>
 
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     {getRoleDescription()}
-                  </p>
-                </div>
-
-                <div className="mt-4 rounded-xl border border-slate-200 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    User ID
-                  </p>
-
-                  <p className="mt-2 break-all text-sm text-slate-600">
-                    {profile.id}
                   </p>
                 </div>
               </div>

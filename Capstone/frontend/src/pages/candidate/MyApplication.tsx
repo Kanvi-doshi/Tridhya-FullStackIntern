@@ -81,7 +81,7 @@ const MyApplications = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         <button
           onClick={() => navigate("/dashboard")}
           className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-violet-600"

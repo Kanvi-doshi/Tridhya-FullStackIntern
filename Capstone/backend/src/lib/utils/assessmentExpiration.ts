@@ -13,7 +13,7 @@ const attemptRepository = AppDataSource.getRepository(AssessmentAttempt);
 
 const expireAssessments = async () => {
   try {
-    console.log("[Assessment Job] Checking expired assessments...");
+    // console.log("[Assessment Job] Checking expired assessments...");
 
     const attempts = await attemptRepository.find({
       where: {
@@ -66,5 +66,5 @@ export const startAssessmentExpirationJob = () => {
     await expireAssessments();
   });
 
-  console.log("Assessment expiration job started");
+  // console.log("Assessment expiration job started");
 };

@@ -100,11 +100,11 @@ const CanJobDetails = () => {
         <ArrowLeft size={17} />
         Back to Job
       </button>
-      <main className="mx-auto max-w-3xl px-5 py-4">
+      <main className="mx-auto max-w-3xl px-2">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 text-white">
+          <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-5 text-white">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-10 items-center justify-center rounded-xl bg-white/15">
+              <div className="flex h-8 w-9 items-center justify-center rounded-xl bg-white/15">
                 <BriefcaseBusiness size={20} />
               </div>
 
