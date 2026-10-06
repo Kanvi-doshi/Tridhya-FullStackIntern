@@ -1,16 +1,31 @@
 import { Request, Response, NextFunction } from "express";
-
 import { AppDataSource } from "../lib/config/db";
-
 import { Question, QuestionType } from "../lib/entity/Questions";
 import { InterviewRound } from "../lib/entity/InterviewRound";
-
 import { AppError } from "../lib/middleware/error.middleware";
+import { createQuestionSchema } from "../lib/validation/question.validation";
+import { AssessmentAttempt } from "../lib/entity/AssessmentAttempt";
+import { getIO } from "../lib/config/socket";
 
 const questionRepository = AppDataSource.getRepository(Question);
-
 const roundRepository = AppDataSource.getRepository(InterviewRound);
 
+const assertRoundQuestionsEditable = async (roundId: string) => {
+  const hasAttempts = await AppDataSource.getRepository(
+    AssessmentAttempt,
+  ).exists({
+    where: {
+      round: { id: roundId },
+    },
+  });
+
+  if (hasAttempts) {
+    throw new AppError(
+      "Questions cannot be changed after a candidate starts this round. Create a new round instead.",
+      409,
+    );
+  }
+};
 // HR - Create question
 export const createQuestion = async (
   req: Request,
@@ -48,6 +63,8 @@ export const createQuestion = async (
       );
     }
 
+    await assertRoundQuestionsEditable(roundId);
+
     const existingQuestion = await questionRepository.findOne({
       where: {
         round: {
@@ -77,6 +94,7 @@ export const createQuestion = async (
     });
 
     await questionRepository.save(newQuestion);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(201).json({
       success: true,
@@ -138,12 +156,8 @@ export const getQuestionById = async (
     const id = String(req.params.id);
 
     const question = await questionRepository.findOne({
-      where: {
-        id,
-      },
-      relations: {
-        round: true,
-      },
+      where: { id },
+      relations: { round: true },
     });
 
     if (!question) {
@@ -168,48 +182,68 @@ export const updateQuestion = async (
   try {
     const id = String(req.params.id);
     const question = await questionRepository.findOne({
-      where: {
-        id,
-      },
+      where: { id },
+      relations: { round: true },
     });
+
     if (!question) {
       throw new AppError("Question not found", 404);
     }
 
-    const {
-      type,
-      question: questionText,
-      options,
-      correctAnswer,
-      marks,
-      orderNumber,
-    } = req.body;
+    await assertRoundQuestionsEditable(question.round.id);
+    // Validate the complete resulting question, including partial updates.
+    const parsed = createQuestionSchema.safeParse({
+      type: question.type,
+      question: question.question,
+      marks: question.marks,
+      orderNumber: question.orderNumber,
+      options: question.options ?? undefined,
+      correctAnswer: question.correctAnswer ?? undefined,
+      starterCode: question.starterCode ?? undefined,
+      testCases: question.testCases ?? undefined,
+      ...req.body,
+    });
 
-    if (type !== undefined) {
-      question.type = type;
+    if (!parsed.success) {
+      throw new AppError(
+        parsed.error.issues.map((issue) => issue.message).join("; "),
+        400,
+      );
     }
 
-    if (questionText !== undefined) {
-      question.question = questionText;
+    const data = parsed.data;
+
+    const conflictingQuestion = await questionRepository.findOne({
+      where: {
+        round: { id: question.round.id },
+        orderNumber: data.orderNumber,
+      },
+    });
+    if (conflictingQuestion && conflictingQuestion.id !== question.id) {
+      throw new AppError(
+        `Question order ${data.orderNumber} already exists in this round`,
+        409,
+      );
     }
 
-    if (options !== undefined) {
-      question.options = options;
-    }
+    question.type = data.type;
+    question.question = data.question;
+    question.marks = data.marks ?? question.marks;
+    question.orderNumber = data.orderNumber ?? question.orderNumber;
 
-    if (correctAnswer !== undefined) {
-      question.correctAnswer = correctAnswer;
-    }
+    question.options = data.type === QuestionType.MCQ ? data.options! : null;
 
-    if (marks !== undefined) {
-      question.marks = marks;
-    }
+    question.correctAnswer =
+      data.type === QuestionType.MCQ ? data.correctAnswer! : null;
 
-    if (orderNumber !== undefined) {
-      question.orderNumber = orderNumber;
-    }
+    question.starterCode =
+      data.type === QuestionType.CODING ? (data.starterCode ?? "") : null;
+
+    question.testCases =
+      data.type === QuestionType.CODING ? data.testCases! : null;
 
     await questionRepository.save(question);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(200).json({
       success: true,
@@ -230,9 +264,8 @@ export const deleteQuestion = async (
   try {
     const id = String(req.params.id);
     const question = await questionRepository.findOne({
-      where: {
-        id,
-      },
+      where: { id, },
+      relations:{round:true},
     });
 
     if (!question) {
@@ -240,6 +273,8 @@ export const deleteQuestion = async (
     }
 
     await questionRepository.remove(question);
+    getIO().to("hr").emit("hr:updated");
+
     return res.status(200).json({
       success: true,
       message: "Question deleted successfully",

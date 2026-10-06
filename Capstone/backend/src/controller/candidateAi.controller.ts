@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { In } from "typeorm";
+import { getIO } from "../lib/config/socket";
 import { AppDataSource } from "../lib/config/db";
 import { Application } from "../lib/entity/Application";
 import {
@@ -9,6 +10,7 @@ import {
 import { InterviewFeedback } from "../lib/entity/interviewFeedback";
 import { AppError } from "../lib/middleware/error.middleware";
 import { generateCandidateAISummary } from "../lib/services/candidateAi.services";
+import { assertAssessmentsPassed } from "../lib/utils/assertAssessmentsPassed";
 
 const applicationRepository = AppDataSource.getRepository(Application);
 const assessmentRepository = AppDataSource.getRepository(AssessmentAttempt);
@@ -37,6 +39,8 @@ export const generateCandidateSummary = async (
       throw new AppError("Application not found", 404);
     }
 
+    await assertAssessmentsPassed(application.id, application.job.id);
+
     // GET ASSESSMENT RESULTS
     const assessments = await assessmentRepository.find({
       where: {
@@ -48,7 +52,6 @@ export const generateCandidateSummary = async (
     });
 
     let assessmentScore = 0;
-
     if (assessments.length > 0) {
       const totalAssessmentScore = assessments.reduce(
         (total, assessment) => total + Number(assessment.score || 0),
@@ -83,7 +86,6 @@ export const generateCandidateSummary = async (
       );
       interviewRating = totalRating / feedbacks.length;
     }
-
     interviewRating = Number(interviewRating.toFixed(2));
 
     // COLLECT FEEDBACK DETAILS
@@ -99,6 +101,19 @@ export const generateCandidateSummary = async (
       .map((feedback) => feedback.comments)
       .filter((comment): comment is string => Boolean(comment));
 
+    if (feedbacks.length === 0) {
+      throw new AppError(
+        "Interview feedback is required before final AI analysis.",
+        400,
+      );
+    }
+
+    if (application.overallScore === null) {
+      throw new AppError(
+        "Calculate the final score before generating the AI summary.",
+        400,
+      );
+    }
     // CALL GEMINI
     const aiResult = await generateCandidateAISummary({
       candidateName: application.candidate.name,
@@ -110,17 +125,20 @@ export const generateCandidateSummary = async (
       resumeEducation: application.resumeEducation,
       resumeStrengths: application.resumeStrengths,
       resumeMissingSkills: application.resumeMissingSkills,
-      jobMatchScore: application.jobMatchScore
-        ? Number(application.jobMatchScore)
-        : null,
+      jobMatchScore:
+        application.jobMatchScore != null
+          ? Number(application.jobMatchScore)
+          : null,
+
+      overallScore:
+        application.overallScore != null
+          ? Number(application.overallScore)
+          : null,
       assessmentScore,
       interviewRating,
       interviewStrengths,
       interviewWeaknesses,
       interviewComments,
-      overallScore: application.overallScore
-        ? Number(application.overallScore)
-        : null,
     });
 
     application.aiCandidateSummary = aiResult.summary;
@@ -129,6 +147,8 @@ export const generateCandidateSummary = async (
     application.aiRecommendation = aiResult.recommendation;
 
     await applicationRepository.save(application);
+
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(200).json({
       success: true,

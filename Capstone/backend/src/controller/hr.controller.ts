@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "../lib/config/db";
+import { getIO } from "../lib/config/socket";
 import { User, UserRole } from "../lib/entity/User";
 import { AppError } from "../lib/middleware/error.middleware";
 
@@ -91,14 +92,15 @@ export const updateUserRole = async (
     if (!user) {
       throw new AppError("User not found", 404);
     }
-
     if (user.role === UserRole.HR) {
       throw new AppError("HR role cannot be changed", 400);
     }
 
     user.role = role;
-
     await userRepository.save(user);
+
+    getIO().in(`user:${user.id}`).disconnectSockets(true);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(200).json({
       success: true,
@@ -144,6 +146,9 @@ export const updateUserStatus = async (
     user.isActive = isActive;
 
     await userRepository.save(user);
+
+    getIO().in(`user:${user.id}`).disconnectSockets(true);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(200).json({
       success: true,

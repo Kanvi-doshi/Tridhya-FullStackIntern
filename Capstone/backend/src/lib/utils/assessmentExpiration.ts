@@ -1,15 +1,13 @@
 import cron from "node-cron";
-
 import { AppDataSource } from "../config/db";
-
 import {
   AssessmentAttempt,
+  AssessmentAutoSubmitReason,
   AssessmentStatus,
 } from "../entity/AssessmentAttempt";
-
 import { isAssessmentExpired } from "../utils/assessmentTimer";
-
-import { evaluateAssessment } from "../utils/evaluateAssessment";
+import { autoSubmitAssessment } from "../utils/assessmentProctoring";
+import { getIO } from "../config/socket";
 
 const attemptRepository = AppDataSource.getRepository(AssessmentAttempt);
 
@@ -21,9 +19,9 @@ const expireAssessments = async () => {
       where: {
         status: AssessmentStatus.IN_PROGRESS,
       },
-
       relations: {
         round: true,
+        application: true,
       },
     });
 
@@ -31,12 +29,27 @@ const expireAssessments = async () => {
       if (!isAssessmentExpired(attempt)) {
         continue;
       }
-
       console.log(`[Assessment Job] Auto submitting attempt: ${attempt.id}`);
 
-      await evaluateAssessment(attempt, true);
+      const submitted = await autoSubmitAssessment(
+        attempt,
+        AssessmentAutoSubmitReason.TIME_EXPIRED,
+      );
 
-      await attemptRepository.save(attempt);
+      if (!submitted) {
+        continue;
+      }
+
+      getIO().to("hr").emit("assessment:submitted", {
+        applicationId: attempt.application.id,
+        attemptId: attempt.id,
+        roundId: attempt.round.id,
+        status: attempt.status,
+        score: attempt.score,
+        autoSubmitted: true,
+        autoSubmitReason: attempt.autoSubmitReason,
+        submittedAt: attempt.submittedAt,
+      });
 
       console.log(`[Assessment Job] Attempt ${attempt.id} auto submitted`);
     }

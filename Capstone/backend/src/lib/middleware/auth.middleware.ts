@@ -1,14 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 
 import { AppDataSource } from "../config/db";
 import { User } from "../entity/User";
+import { verifyAccessToken } from "../services/jwt.services";
 import { AppError } from "./error.middleware";
-
-interface JwtPayload {
-  id: string;
-  role: string;
-}
 
 export const protect = async (
   req: Request,
@@ -24,15 +19,20 @@ export const protect = async (
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string,
-    ) as JwtPayload;
+    let decoded;
+
+    try {
+      decoded = verifyAccessToken(token);
+    } catch {
+      throw new AppError("Invalid or expired access token", 401);
+    }
 
     const userRepository = AppDataSource.getRepository(User);
 
     const user = await userRepository.findOne({
-      where: { id: decoded.id },
+      where: {
+        id: decoded.id,
+      },
     });
 
     if (!user) {

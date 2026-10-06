@@ -27,15 +27,15 @@ const parseTestCaseInput = (input: string): any[] => {
   }
 };
 
+// This restores the local evaluator; node:vm is not a security boundary.
 const executeJavaScriptTestCase = (answerText: string, input: string) => {
   const fnName = getFunctionName(answerText);
-
   if (!fnName) {
     throw new Error("Function not found");
   }
-  const inputs = parseTestCaseInput(input);
+
   const context = {
-    inputs,
+    inputs: parseTestCaseInput(input),
   };
   vm.createContext(context);
 
@@ -43,9 +43,7 @@ const executeJavaScriptTestCase = (answerText: string, input: string) => {
     ${answerText}
     ${fnName}(...inputs);
   `);
-  return script.runInContext(context, {
-    timeout: 1000,
-  });
+  return script.runInContext(context, { timeout: 1000 });
 };
 
 export const evaluateAssessment = async (

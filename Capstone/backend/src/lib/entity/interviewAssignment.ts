@@ -81,4 +81,12 @@ export class InterviewAssignment {
     name: "updated_at",
   })
   updatedAt!: Date;
+
+  @Column({
+    name: "ends_at",
+    type: "timestamp",
+    nullable: true,
+  })
+  endsAt!: Date | null;
+  
 }

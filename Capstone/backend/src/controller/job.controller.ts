@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-
+import { getIO } from "../lib/config/socket";
 import { AppDataSource } from "../lib/config/db";
 import { Job } from "../lib/entity/Job";
 import { AppError } from "../lib/middleware/error.middleware";
@@ -31,6 +31,8 @@ export const createJob = async (
     });
 
     await jobRepository.save(job);
+
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(201).json({
       success: true,
@@ -129,7 +131,7 @@ export const updateJob = async (
     jobRepository.merge(job, req.body);
 
     await jobRepository.save(job);
-
+    getIO().to("hr").emit("hr:updated");
     return res.status(200).json({
       success: true,
       message: "Job updated successfully",
@@ -164,7 +166,7 @@ export const deleteJob = async (
     }
 
     await jobRepository.remove(job);
-
+    getIO().to("hr").emit("hr:updated");
     return res.status(200).json({
       success: true,
       message: "Job deleted successfully",

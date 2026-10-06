@@ -44,7 +44,7 @@ Do not invent information that is not present in the resume.
 `;
 
   const response = await gemini.models.generateContent({
-    model: "gemini-3.6-flash",
+    model: "gemini-3.5-flash-lite",
 
     contents: prompt,
 
@@ -107,13 +107,10 @@ Do not invent information that is not present in the resume.
   });
 
   if (!response.text) {
-    throw new Error(
-      "Gemini did not return resume analysis",
-    );
+    throw new Error("Gemini did not return resume analysis");
   }
 
-  const analysis: ResumeAnalysisResult =
-    JSON.parse(response.text);
+  const analysis: ResumeAnalysisResult = JSON.parse(response.text);
 
   return analysis;
 };

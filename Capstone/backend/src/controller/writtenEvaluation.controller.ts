@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "../lib/config/db";
 import { Answer } from "../lib/entity/Answer";
-import { AssessmentAttempt } from "../lib/entity/AssessmentAttempt";
+import {
+  AssessmentAttempt,
+  AssessmentStatus,
+} from "../lib/entity/AssessmentAttempt";
 import { QuestionType } from "../lib/entity/Questions";
 import { AppError } from "../lib/middleware/error.middleware";
 import { evaluateAssessment } from "../lib/utils/evaluateAssessment";
+import { updateApplicationRound } from "../lib/utils/updateApplicationRound";
 import { evaluateWrittenWithAI } from "../lib/services/writtenAi.services";
 import { getIO } from "../lib/config/socket";
 
@@ -30,8 +34,8 @@ export const evaluateWrittenManually = async (
       relations: {
         question: true,
         attempt: {
-            round: true,
-            application:true,
+          round: true,
+          application: true,
         },
       },
     });
@@ -44,11 +48,41 @@ export const evaluateWrittenManually = async (
       throw new AppError("This is not a written answer", 400);
     }
 
-    if (marksObtained < 0 || marksObtained > answer.question.marks) {
+    if (
+      !answer.attempt.submittedAt ||
+      answer.attempt.status !== AssessmentStatus.PENDING_EVALUATION
+    ) {
       throw new AppError(
-        `Marks must be between 0 and ${answer.question.marks}`,
+        "Only submitted assessments awaiting evaluation can be graded",
+        409,
+      );
+    }
+
+    if (answer.marksObtained !== null) {
+      throw new AppError("This answer has already been evaluated", 409);
+    }
+
+    if (!answer.answerText?.trim()) {
+      throw new AppError("Empty answers receive zero marks automatically", 400);
+    }
+
+    if (
+      typeof marksObtained !== "number" ||
+      !Number.isFinite(marksObtained) ||
+      marksObtained < 0 ||
+      marksObtained > answer.question.marks
+    ) {
+      throw new AppError(
+        `Marks must be a number between 0 and ${answer.question.marks}`,
         400,
       );
+    }
+
+    if (
+      feedback !== undefined &&
+      (typeof feedback !== "string" || feedback.length > 5000)
+    ) {
+      throw new AppError("Feedback must be text up to 5000 characters", 400);
     }
 
     answer.marksObtained = Number(marksObtained);
@@ -58,6 +92,7 @@ export const evaluateWrittenManually = async (
 
     const result = await evaluateAssessment(answer.attempt);
     await attemptRepository.save(answer.attempt);
+    await updateApplicationRound(answer.attempt);
 
     getIO().to("hr").emit("assessment:evaluated", {
       attemptId: answer.attempt.id,
@@ -97,8 +132,8 @@ export const evaluateWrittenWithAIController = async (
       relations: {
         question: true,
         attempt: {
-            round: true,
-            application:true,
+          round: true,
+          application: true,
         },
       },
     });
@@ -110,9 +145,22 @@ export const evaluateWrittenWithAIController = async (
     if (answer.question.type !== QuestionType.WRITTEN) {
       throw new AppError("This is not a written answer", 400);
     }
+    if (
+      !answer.attempt.submittedAt ||
+      answer.attempt.status !== AssessmentStatus.PENDING_EVALUATION
+    ) {
+      throw new AppError(
+        "Only submitted assessments awaiting evaluation can be graded",
+        409,
+      );
+    }
+
+    if (answer.marksObtained !== null) {
+      throw new AppError("This answer has already been evaluated", 409);
+    }
 
     if (!answer.answerText?.trim()) {
-      throw new AppError("Written answer is empty", 400);
+      throw new AppError("Empty answers receive zero marks automatically", 400);
     }
 
     const aiResult = await evaluateWrittenWithAI(
@@ -121,12 +169,26 @@ export const evaluateWrittenWithAIController = async (
       Number(answer.question.marks),
     );
 
+    if (
+      !Number.isFinite(aiResult.marksObtained) ||
+      aiResult.marksObtained < 0 ||
+      aiResult.marksObtained > answer.question.marks ||
+      typeof aiResult.feedback !== "string"
+    ) {
+      throw new AppError(
+        "AI returned an invalid evaluation. Try manual grading.",
+        502,
+      );
+    }
+
     answer.marksObtained = aiResult.marksObtained;
     answer.evaluationFeedback = aiResult.feedback;
+
     await answerRepository.save(answer);
 
     const result = await evaluateAssessment(answer.attempt);
     await attemptRepository.save(answer.attempt);
+    await updateApplicationRound(answer.attempt);
 
     getIO().to("hr").emit("assessment:evaluated", {
       attemptId: answer.attempt.id,
@@ -136,7 +198,7 @@ export const evaluateWrittenWithAIController = async (
       obtainedMarks: answer.attempt.obtainedMarks,
       totalMarks: answer.attempt.totalMarks,
     });
-      
+
     return res.status(200).json({
       success: true,
       message: "Written answer evaluated by AI successfully",

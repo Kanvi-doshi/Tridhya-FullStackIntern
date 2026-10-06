@@ -22,20 +22,17 @@ const router = Router();
 
 router.get("/", getJobs);
 router.get("/:id", getJobById);
+
+
+router.use(protect, authorize(UserRole.HR));
 router.post(
-  "/",
-  protect,
-  authorize(UserRole.HR),
-  validate(createJobSchema),
+  "/",validate(createJobSchema),
   createJob,
 );
 router.put(
-  "/:id",
-  protect,
-  authorize(UserRole.HR),
-  validate(updateJobSchema),
+  "/:id",validate(updateJobSchema),
   updateJob,
 );
-router.delete("/:id", protect, authorize(UserRole.HR), deleteJob);
+router.delete("/:id", deleteJob);
 
 export default router;

@@ -80,6 +80,7 @@ export class Application {
   })
   resumeOriginalName!: string | null;
 
+  
   @Column({
     name: "resume_text",
     type: "text",
@@ -177,5 +178,3 @@ export class Application {
   })
   updatedAt!: Date;
 }
-
-

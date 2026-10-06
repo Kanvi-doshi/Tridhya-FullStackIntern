@@ -13,11 +13,15 @@ import { InterviewRound } from "./InterviewRound";
 
 export enum AssessmentStatus {
   IN_PROGRESS = "IN_PROGRESS",
-  // SUBMITTED = "SUBMITTED",
-  // AUTO_SUBMITTED = "AUTO_SUBMITTED",
   PENDING_EVALUATION = "PENDING_EVALUATION",
   PASSED = "PASSED",
   FAILED = "FAILED",
+}
+
+export enum AssessmentAutoSubmitReason {
+  TIME_EXPIRED = "TIME_EXPIRED",
+  TAB_SWITCH = "TAB_SWITCH",
+  CAMERA_VIOLATION = "CAMERA_VIOLATION",
 }
 
 @Entity("assessment_attempts")
@@ -25,7 +29,6 @@ export class AssessmentAttempt {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  // Which candidate application this assessment belongs to
   @ManyToOne(() => Application, {
     nullable: false,
     onDelete: "CASCADE",
@@ -35,7 +38,6 @@ export class AssessmentAttempt {
   })
   application!: Application;
 
-  // Which interview round candidate is attempting
   @ManyToOne(() => InterviewRound, {
     nullable: false,
     onDelete: "CASCADE",
@@ -97,6 +99,35 @@ export class AssessmentAttempt {
     default: false,
   })
   autoSubmitted!: boolean;
+
+  @Column({
+    name: "auto_submit_reason",
+    type: "enum",
+    enum: AssessmentAutoSubmitReason,
+    nullable: true,
+  })
+  autoSubmitReason!: AssessmentAutoSubmitReason | null;
+
+  @Column({
+    name: "tab_switch_count",
+    type: "integer",
+    default: 0,
+  })
+  tabSwitchCount!: number;
+
+  @Column({
+    name: "violation_count",
+    type: "integer",
+    default: 0,
+  })
+  violationCount!: number;
+
+  @Column({
+    name: "camera_enabled",
+    type: "boolean",
+    default: false,
+  })
+  cameraEnabled!: boolean;
 
   @CreateDateColumn({
     name: "created_at",

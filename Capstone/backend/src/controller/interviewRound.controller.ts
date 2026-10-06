@@ -1,14 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-
 import { AppDataSource } from "../lib/config/db";
-
 import { InterviewRound } from "../lib/entity/InterviewRound";
 import { Job } from "../lib/entity/Job";
-
 import { AppError } from "../lib/middleware/error.middleware";
+import { getIO } from "../lib/config/socket";
 
 const roundRepository = AppDataSource.getRepository(InterviewRound);
-
 const jobRepository = AppDataSource.getRepository(Job);
 
 // HR - Create interview round
@@ -18,7 +15,7 @@ export const createInterviewRound = async (
   next: NextFunction,
 ) => {
   try {
-   const jobId = String(req.params.jobId);
+    const jobId = String(req.params.jobId);
 
     const {
       roundNumber,
@@ -68,6 +65,7 @@ export const createInterviewRound = async (
     });
 
     await roundRepository.save(round);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(201).json({
       success: true,
@@ -86,7 +84,7 @@ export const getRoundsByJob = async (
   next: NextFunction,
 ) => {
   try {
-   const jobId = String(req.params.jobId);
+    const jobId = String(req.params.jobId);
     const job = await jobRepository.findOne({
       where: {
         id: jobId,
@@ -125,7 +123,7 @@ export const getInterviewRoundById = async (
   next: NextFunction,
 ) => {
   try {
-    const id  = String(req.params.id);
+    const id = String(req.params.id);
 
     const round = await roundRepository.findOne({
       where: {
@@ -156,7 +154,7 @@ export const updateInterviewRound = async (
   next: NextFunction,
 ) => {
   try {
-     const id = String(req.params.id);
+    const id = String(req.params.id);
 
     const round = await roundRepository.findOne({
       where: {
@@ -207,6 +205,7 @@ export const updateInterviewRound = async (
     }
 
     await roundRepository.save(round);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(200).json({
       success: true,
@@ -238,6 +237,7 @@ export const deleteInterviewRound = async (
     }
 
     await roundRepository.remove(round);
+    getIO().to("hr").emit("hr:updated");
 
     return res.status(200).json({
       success: true,

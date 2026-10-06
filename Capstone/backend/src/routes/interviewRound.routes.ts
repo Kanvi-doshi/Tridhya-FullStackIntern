@@ -19,14 +19,15 @@ import {
 
 const router = Router();
 
+
+router.use(protect);
 // Get all rounds of one job
-router.get("/job/:jobId", protect, getRoundsByJob);
+router.get("/job/:jobId",getRoundsByJob);
 // Get single round
-router.get("/:id", protect, getInterviewRoundById);
+router.get("/:id", getInterviewRoundById);
 // HR - Create round
 router.post(
   "/job/:jobId",
-  protect,
   authorize(UserRole.HR),
   validate(createInterviewRoundSchema),
   createInterviewRound,
@@ -35,12 +36,11 @@ router.post(
 // HR - Update round
 router.put(
   "/:id",
-  protect,
   authorize(UserRole.HR),
   validate(updateInterviewRoundSchema),
   updateInterviewRound,
 );
 
 // HR - Delete round
-router.delete("/:id", protect, authorize(UserRole.HR), deleteInterviewRound);
+router.delete("/:id",authorize(UserRole.HR), deleteInterviewRound);
 export default router;
