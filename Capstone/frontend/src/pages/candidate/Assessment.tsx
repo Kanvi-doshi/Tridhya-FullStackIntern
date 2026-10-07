@@ -718,7 +718,7 @@ export default function Assessment() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl space-y-5 p-6">
+    <main className="mx-auto max-w-6xl space-y-5 p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{title}</h1>
 

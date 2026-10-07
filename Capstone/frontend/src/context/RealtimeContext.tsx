@@ -74,12 +74,15 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
     socket.on("interviews:updated", refresh);
     socket.on("candidate:updated", refresh);
     socket.on("application:statusChanged", refresh);
+    socket.on("notification:new", refresh);
+    socket.on("notification:updated", refresh);
 
     // Already emitted by your assessment controllers.
     socket.on("assessment:started", refresh);
     socket.on("assessment:submitted", refresh);
     socket.on("assessment:evaluated", refresh);
     socket.on("assessment:violation", refresh);
+
 
     socket.on("disconnect", retry);
     socket.on("connect_error", retry);

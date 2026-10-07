@@ -10,11 +10,12 @@ import {
   UserRoundSearch,
   Video,
 } from "lucide-react";
-import {useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 import api from "../../services/api";
 import { HRRealtimeContext } from "../../context/RealtimeContext";
+import NotificationBell from "../../component/NotificationBell";
 
 interface DashboardAnalytics {
   jobs: {
@@ -123,14 +124,6 @@ const HRDash = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-slate-700">
-                {user?.name}
-              </p>
-
-              <p className="text-xs text-slate-400">HR Administrator</p>
-            </div>
-
             <button
               onClick={() => navigate("/profile")}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 font-semibold text-violet-600 transition hover:bg-violet-200"
@@ -138,6 +131,7 @@ const HRDash = () => {
             >
               {user?.name?.charAt(0).toUpperCase() || "H"}
             </button>
+            <NotificationBell />
           </div>
         </div>
       </nav>

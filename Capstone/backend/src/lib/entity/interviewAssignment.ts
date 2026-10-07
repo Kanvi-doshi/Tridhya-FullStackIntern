@@ -88,5 +88,4 @@ export class InterviewAssignment {
     nullable: true,
   })
   endsAt!: Date | null;
-  
 }

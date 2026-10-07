@@ -133,9 +133,9 @@ const AssessmentResult = () => {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-6 py-8">
         {/* RESULT HERO */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-7 text-center">
+        <div className="rounded-2xl border border-slate-300 bg-white p-7 text-center">
           <div
             className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
               pending
@@ -153,21 +153,21 @@ const AssessmentResult = () => {
               <XCircle size={30} />
             )}
           </div>
-          <h1 className="mt-5 text-2xl font-bold text-slate-800">
+          <h1 className="mt-2 text-2xl font-bold text-slate-800">
             {pending
               ? "Evaluation Pending"
               : passed
                 ? "Assessment Passed"
                 : "Assessment Completed"}
           </h1>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">
+          <p className="mx-auto mt-1 max-w-xl text-sm leading-6 text-slate-500">
             {pending
               ? "Your objective answers have been evaluated. Written responses are waiting for evaluation."
               : "Your assessment has been evaluated successfully."}
           </p>
           {score !== null && (
-            <div className="mt-7">
-              <p className="text-5xl font-bold text-violet-600">
+            <div className="mt-1">
+              <p className="text-4xl font-bold text-violet-600">
                 {score.toFixed(1)}%
               </p>
               <p className="mt-2 text-xs text-slate-400">Assessment Score</p>

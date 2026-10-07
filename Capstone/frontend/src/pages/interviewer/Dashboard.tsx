@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 import api from "../../services/api";
 import { HRRealtimeContext } from "../../context/RealtimeContext";
+import NotificationBell from "../../component/NotificationBell";
 
 interface Assignment {
   id: string;
@@ -51,15 +52,17 @@ const InterviewerDashboard = () => {
     };
 
     fetchAssignments();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [revision]);
 
   const completed = assignments.filter(
     (assignment) => assignment.status === "COMPLETED",
   ).length;
 
-  const pending = assignments.filter(
-    (assignment) => ["SCHEDULED", "IN_PROGRESS"].includes(assignment.status),
+  const pending = assignments.filter((assignment) =>
+    ["SCHEDULED", "IN_PROGRESS"].includes(assignment.status),
   ).length;
 
   const upcoming = assignments.filter((assignment) => {
@@ -96,17 +99,13 @@ const InterviewerDashboard = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold">{user?.name}</p>
-              <p className="text-xs text-violet-100">Interviewer</p>
-            </div>
-
             <button
               onClick={() => navigate("/profile")}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white font-bold text-violet-600 transition hover:scale-105"
             >
               {user?.name?.charAt(0).toUpperCase() || "I"}
             </button>
+            <NotificationBell />
           </div>
         </div>
       </nav>

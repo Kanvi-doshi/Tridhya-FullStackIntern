@@ -19,6 +19,8 @@ import { assertAssessmentsPassed } from "../lib/utils/assertAssessmentsPassed";
 import { InterviewRound, RoundType } from "../lib/entity/InterviewRound";
 import { InterviewFeedback } from "../lib/entity/interviewFeedback";
 
+import { notifyUsers } from "../lib/services/notification.service";
+
 const applicationRepository = AppDataSource.getRepository(Application);
 const jobRepository = AppDataSource.getRepository(Job);
 const userRepository = AppDataSource.getRepository(User);
@@ -91,6 +93,32 @@ export const applyForJob = async (
     });
 
     await applicationRepository.save(application);
+
+    void notifyUsers(
+      { userIds: [candidate.id] },
+      {
+        eventKey: `application:${application.id}:applied`,
+        title: "Application submitted",
+        message: `Your application for ${job.title} was submitted successfully.`,
+        link: `/application/${application.id}`,
+      },
+      true,
+    ).catch((error) =>
+      console.error("Candidate application notification failed.", error),
+    );
+
+    void notifyUsers(
+      { role: UserRole.HR },
+      {
+        eventKey: `application:${application.id}:hr-applied`,
+        title: "New job application",
+        message: `${candidate.name} applied for ${job.title}.`,
+        link: `/candidates/${application.id}`,
+      },
+    ).catch((error) =>
+      console.error("HR application notification failed.", error),
+    );
+
     getIO().to("hr").emit("hr:updated");
     return res.status(201).json({
       success: true,
@@ -453,6 +481,44 @@ export const updateApplicationStatus = async (
       );
     }
     application.status = status;
+
+    const statusMessages: Partial<Record<ApplicationStatus, string>> = {
+      [ApplicationStatus.SHORTLISTED]: `You have been shortlisted for ${application.job.title}. 
+      
+      You can now start the assessments from your application page. Complete the three assessment rounds in order.
+
+      Assessment 1: Mcq round
+      Assessment 2: Coding
+      Assessment 3: Written 
+
+      Failing an assessment or triggering a tab-switch or camera violation will result in rejection. Also make sure to attempt this assessment within 2-3 days.`,
+
+      [ApplicationStatus.INTERVIEWING]: `HR approved you for the final interview for ${application.job.title}.`,
+
+      [ApplicationStatus.SELECTED]: `You have been selected for ${application.job.title}.`,
+
+      [ApplicationStatus.REJECTED]: `Your application for ${application.job.title} was rejected. Sign in to view your application status.`,
+    };
+
+    const statusMessage = statusMessages[status];
+
+    if (statusMessage) {
+      void notifyUsers(
+        { userIds: [application.candidate.id] },
+        {
+          eventKey: `application:${application.id}:status:${status}`,
+          title:
+            status === ApplicationStatus.SHORTLISTED
+              ? "You have been shortlisted"
+              : `Application ${status.toLowerCase()}`,
+          message: statusMessage,
+          link: `/application/${application.id}`,
+        },
+        true,
+      ).catch((error) =>
+        console.error("Application status notification failed.", error),
+      );
+    }
 
     getIO()
       .to(`candidate:${application.candidate.id}`)

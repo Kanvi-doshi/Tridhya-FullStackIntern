@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 import api from "../../services/api";
 import { HRRealtimeContext } from "../../context/RealtimeContext";
+import NotificationBell from "../../component/NotificationBell";
 
 interface Application {
   id: string;
@@ -218,7 +219,7 @@ const AssessmentStatus = ({ jobId }: { jobId: string }) => {
         >
           {nextRound.roundNumber === 1
             ? "START ROUND 1 →"
-            : `CONTINUE TO ROUND ${nextRound.roundNumber} →`}
+            : `ROUND ${nextRound.roundNumber} →`}
         </button>
       );
     }
@@ -366,14 +367,6 @@ const CandidateDash = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-slate-700">
-                {user?.name}
-              </p>
-
-              <p className="text-xs text-slate-400">Candidate</p>
-            </div>
-
             <button
               onClick={() => navigate("/profile")}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 font-semibold text-violet-600 transition hover:bg-violet-200"
@@ -381,6 +374,7 @@ const CandidateDash = () => {
             >
               {user?.name?.charAt(0).toUpperCase() || "C"}
             </button>
+            <NotificationBell />
           </div>
         </div>
       </nav>

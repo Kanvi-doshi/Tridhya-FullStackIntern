@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "../lib/config/db";
-import { InterviewAssignment } from "../lib/entity/interviewAssignment";
+import {
+  InterviewAssignment,
+  InterviewAssignmentStatus,
+} from "../lib/entity/interviewAssignment";
 import { saveInterviewBooking } from "../lib/services/interviewBooking.service";
 import { getIO } from "../lib/config/socket";
+import { notifyUsers } from "../lib/services/notification.service";
 
 const assignmentRepository = AppDataSource.getRepository(InterviewAssignment);
 
@@ -25,9 +29,47 @@ export const createInterviewAssignment = async (
       },
     );
 
+    const details =
+      `Interview for ${assignment.application.job.title}: ${assignment.round.title}. ` +
+      `Start: ${new Date(assignment.scheduledAt).toISOString()} (UTC). ` +
+      `End: ${
+        assignment.endsAt
+          ? `${new Date(assignment.endsAt).toISOString()} (UTC)`
+          : "Not specified"
+      }. ` +
+      `Interviewer: ${assignment.interviewer.name}. ` +
+      `Location or meeting link: ${assignment.location || "Check your application dashboard."}`;
+
+    void notifyUsers(
+      { userIds: [assignment.interviewer.id] },
+      {
+        eventKey: `interview:${assignment.id}:scheduled:interviewer`,
+        title: "Interview assigned to you",
+        message: details,
+        link: `/interview/${assignment.id}`,
+      },
+    ).catch((error) =>
+      console.error("Interviewer notification failed.", error),
+    );
+
+    void notifyUsers(
+      { userIds: [assignment.application.candidate.id] },
+      {
+        eventKey: `interview:${assignment.id}:scheduled:candidate`,
+        title: "Interview scheduled",
+        message: details,
+        link: `/application/${assignment.application.id}`,
+      },
+      true,
+    ).catch((error) =>
+      console.error("Candidate interview email failed.", error),
+    );
+
     getIO().to("hr").emit("hr:updated");
     getIO().to("interviewers").emit("interviews:updated");
-    getIO().to(`candidate:${assignment.application.candidate.id}`).emit("candidate:updated");
+    getIO()
+      .to(`candidate:${assignment.application.candidate.id}`)
+      .emit("candidate:updated");
 
     return res.status(201).json({
       success: true,
@@ -126,9 +168,55 @@ export const updateInterviewAssignment = async (
         status: req.body.status,
       },
     );
+
+    const updatedAt = assignment.scheduledAt.toISOString();
+    const cancelled = assignment.status === InterviewAssignmentStatus.CANCELLED;
+
+    const details = cancelled
+      ? `The ${assignment.round.title} interview for ${assignment.application.job.title} scheduled at ${new Date(assignment.scheduledAt).toISOString()} (UTC) was cancelled.`
+      : `Interview for ${assignment.application.job.title}: ${assignment.round.title}. Start: ${new Date(assignment.scheduledAt).toISOString()} (UTC). End: ${
+          assignment.endsAt
+            ? `${new Date(assignment.endsAt).toISOString()} (UTC)`
+            : "Not specified"
+        }. Interviewer: ${assignment.interviewer.name}. Location or meeting link: ${
+          assignment.location || "Check your application dashboard."
+        }`;
+
+    void notifyUsers(
+      { userIds: [assignment.interviewer.id] },
+      {
+        eventKey: `interview:${assignment.id}:updated:${updatedAt}:interviewer`,
+        title: cancelled ? "Interview cancelled" : "Interview schedule updated",
+        message: details,
+        link: `/interview/${assignment.id}`,
+      },
+    ).catch((error) =>
+      console.error(
+        "Interviewer interview update notification failed..",
+        error,
+      ),
+    );
+
+    void notifyUsers(
+      { userIds: [assignment.application.candidate.id] },
+      {
+        eventKey: `interview:${assignment.id}:updated:${updatedAt}:candidate`,
+        title: cancelled
+          ? "Your interview was cancelled"
+          : "Your interview was rescheduled",
+        message: details,
+        link: `/application/${assignment.application.id}`,
+      },
+      true,
+    ).catch((error) =>
+      console.error("Candidate reschedule email failed.", error),
+    );
+
     getIO().to("hr").emit("hr:updated");
     getIO().to("interviewers").emit("interviews:updated");
-    getIO().to(`candidate:${assignment.application.candidate.id}`).emit("candidate:updated");
+    getIO()
+      .to(`candidate:${assignment.application.candidate.id}`)
+      .emit("candidate:updated");
     return res.json({
       success: true,
       message: "Interview updated successfully",

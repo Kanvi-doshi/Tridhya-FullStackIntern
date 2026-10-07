@@ -18,6 +18,8 @@ import writtenEvaluationRoutes from "./routes/writtenEvaluation.routes";
 import hrRoutes from "./routes/hr.routes";
 import interviewerRoutes from "./routes/interviewer.routes";
 
+import notificationRoutes from "./routes/notification.routes";
+
 const app = express();
 
 app.use(
@@ -43,6 +45,7 @@ app.use("/api/written-evaluation", writtenEvaluationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/hr", hrRoutes);
 app.use("/api/interviewer", interviewerRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(errorHandler);
 
