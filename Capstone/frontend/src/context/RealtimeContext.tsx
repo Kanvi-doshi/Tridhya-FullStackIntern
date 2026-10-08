@@ -18,7 +18,7 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const socket = io(import.meta.env.VITE_SOCKET_URL ?? "http://localhost:5000", {
+    const socket = io(import.meta.env.VITE_API_URL ?? "http://localhost:5000", {
       autoConnect: false,
       withCredentials: true,
       reconnection: false,
