@@ -22,9 +22,15 @@ import notificationRoutes from "./routes/notification.routes";
 
 const app = express();
 
+const corsOrigins = (
+  process.env.CORS_ORIGINS ?? "http://localhost:5173"
+)
+  .split(",")
+  .map((origin) => origin.trim());
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:corsOrigins,
     credentials: true,
   }),
 );

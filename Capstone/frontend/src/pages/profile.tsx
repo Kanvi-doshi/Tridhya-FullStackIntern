@@ -1,7 +1,6 @@
 import axios from "axios";
 import {
   ArrowLeft,
-  BadgeCheck,
   BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,

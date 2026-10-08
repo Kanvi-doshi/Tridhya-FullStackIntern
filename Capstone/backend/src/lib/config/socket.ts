@@ -7,9 +7,15 @@ import { verifyAccessToken } from "../services/jwt.services";
 let io: Server;
 
 export const initializeSocket = (server: HttpServer) => {
+  const corsOrigins = (
+    process.env.CORS_ORIGINS ?? "http://localhost:5173"
+  )
+    .split(",")
+    .map((origin) => origin.trim());
+
   io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: corsOrigins,
       credentials: true,
     },
   });

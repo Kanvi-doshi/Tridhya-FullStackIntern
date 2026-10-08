@@ -28,6 +28,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.20.2",
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.3",
@@ -47,7 +48,6 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/pdfkit": "^0.17.6",
-    "pdfkit": "^0.20.2",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   }
