@@ -34,10 +34,3 @@ const startServer = async () => {
 
 startServer();
 
-// const server = http.createServer(app);
-
-// initializeSocket(server);
-
-// server.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
