@@ -83,7 +83,6 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
     socket.on("assessment:evaluated", refresh);
     socket.on("assessment:violation", refresh);
 
-
     socket.on("disconnect", retry);
     socket.on("connect_error", retry);
 

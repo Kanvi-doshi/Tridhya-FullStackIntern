@@ -22,15 +22,13 @@ import notificationRoutes from "./routes/notification.routes";
 
 const app = express();
 
-const corsOrigins = (
-  process.env.CORS_ORIGINS ?? "http://localhost:5173"
-)
+const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim());
-
+console.log(corsOrigins);
 app.use(
   cors({
-    origin:corsOrigins,
+    origin: corsOrigins,
     credentials: true,
   }),
 );
@@ -54,6 +52,5 @@ app.use("/api/interviewer", interviewerRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 app.use(errorHandler);
-
 
 export default app;
