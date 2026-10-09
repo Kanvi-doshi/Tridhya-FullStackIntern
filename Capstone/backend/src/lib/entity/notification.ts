@@ -1,4 +1,5 @@
 import {
+  Index,
   Entity,
   PrimaryGeneratedColumn,
   Column,
@@ -9,6 +10,7 @@ import {
 } from "typeorm";
 import { User } from "./User";
 
+@Index(["user", "createdAt"])
 @Entity("notifications")
 @Unique(["user", "eventKey"])
 export class Notification {

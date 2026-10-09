@@ -11,16 +11,21 @@ export const getMyNotifications = async (
   next: NextFunction,
 ) => {
   try {
-    const notifications = await notificationRepository.find({
-      where: { user: { id: req.user!.id } },
-      order: { createdAt: "DESC" },
-      take: 30,
-    });
+    const [notifications, unreadCount] = await Promise.all([
+      notificationRepository.find({
+        where: { user: { id: req.user!.id } },
+        order: { createdAt: "DESC" },
+        take: 30,
+      }),
+      notificationRepository.count({
+        where: { user: { id: req.user!.id }, isRead: false },
+      }),
+    ]);
 
     return res.json({
       success: true,
       notifications,
-      unreadCount: notifications.filter((item) => !item.isRead).length,
+      unreadCount,
     });
   } catch (error) {
     next(error);
@@ -34,7 +39,7 @@ export const markNotificationRead = async (
 ) => {
   try {
     await notificationRepository.update(
-      { id: String( req.params.id), user: { id: req.user!.id } },
+      { id: String(req.params.id), user: { id: req.user!.id } },
       { isRead: true },
     );
 

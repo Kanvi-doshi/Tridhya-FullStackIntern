@@ -31,6 +31,7 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
       refreshTimer = setTimeout(() => {
         if (!stopped) setRevision((value) => value + 1);
       }, 250);
+      console.log("refresh");
     };
 
     const connect = async () => {
@@ -48,14 +49,17 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
 
         socket.auth = { token };
         socket.connect();
+        console.log("socket connected");
       } catch (error: unknown) {
         if (
           axios.isAxiosError(error) &&
           [401, 403].includes(error.response?.status ?? 0)
         ) {
+          console.log("socket failed", error);
           return;
         }
 
+        console.log("re-connect check failed",error);
         retry();
       } finally {
         connecting = false;
@@ -69,7 +73,22 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
       retryTimer = setTimeout(() => void connect(), 5000);
     };
 
-    socket.on("realtime:ready", refresh);
+    let firstReady = true;
+    socket.on("realtime:ready", () => {
+      if (firstReady) {
+        firstReady = false;
+        return;
+      }
+      refresh();
+    });
+
+    socket.on("connect", () => console.log("socket: connected", socket.id));
+    socket.on("connect_error", (err) =>
+      console.log("socket: connect_error", err.message),
+    );
+    socket.on("disconnect", (reason) =>
+      console.log("socket: disconnected", reason),
+    );
     socket.on("hr:updated", refresh);
     socket.on("interviews:updated", refresh);
     socket.on("candidate:updated", refresh);
