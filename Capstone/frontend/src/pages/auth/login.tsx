@@ -30,7 +30,6 @@ const Login = () => {
 
       login(token, user);
       navigate("/dashboard");
-
     } catch (error: any) {
       setError(error.response?.data?.message || "Login failed");
     } finally {
@@ -40,8 +39,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-400 to-violet-500 flex items-center justify-center p-5">
-      <div className="w-full max-w-4xl min-h-[520px] bg-white rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-2">
-        <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-500 p-14 text-white">
+      <div className="w-full max-w-4xl min-h-[520px] bg-white rounded-3xl shadow-2xl overflow-hidden grid min-[500px]:grid-cols-2">
+        <div className="relative hidden min-[500px]:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-500 p-14 text-white">
           {/* organic blob shapes */}
           <div className="pointer-events-none absolute -top-16 -left-24 h-72 w-72 rotate-12 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] bg-white/10 blur-sm" />
           <div className="pointer-events-none absolute top-1/3 -right-28 h-80 w-80 -rotate-6 rounded-[40%_60%_70%_30%/40%_70%_30%_60%] bg-indigo-300/25 blur-md" />
@@ -54,7 +53,7 @@ const Login = () => {
           </div>
 
           <div className="relative">
-            <h1 className="text-5xl font-semibold leading-tight">
+            <h1 className="text-3xl min-[700px]:text-5xl min-[936px]:text-5xl font-semibold leading-tight">
               Start your
               <br />
               journey with us.
@@ -71,7 +70,7 @@ const Login = () => {
           </p>
         </div>
 
-        <div className="flex items-center justify-center px-8 py-12 sm:px-14">
+        <div className="flex items-center justify-center px-5 py-12 min-[700px]:px-8 min-[936px]:px-14">
           <div className="w-full max-w-md">
             <div className="mb-9 text-center">
               <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-violet-100">
