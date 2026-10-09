@@ -21,6 +21,7 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
     const socket = io(import.meta.env.VITE_API_URL ?? "http://localhost:5000", {
       autoConnect: false,
       withCredentials: true,
+      transports:["websockets"],
       reconnection: false,
     });
 
