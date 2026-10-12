@@ -15,8 +15,11 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
 
   synchronize: true,
-
   logging: false,
-
   entities: [__dirname + "/../entity/*.{ts,js}"],
+
+  extra: {
+    max: 5,
+    idleTimeoutMillis: 30000,
+  },
 });

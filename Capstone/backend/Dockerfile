@@ -17,7 +17,6 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 
-RUN mkdir -p /app/uploads/resumes && chown -R node:node /app
 USER node
 
 EXPOSE 5000

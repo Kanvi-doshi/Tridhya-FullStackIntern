@@ -1,7 +1,7 @@
 import path from "path";
-import fs from "fs";
 import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "../lib/config/db";
+import { uploadResumeFile, downloadResumeFile } from "../lib/config/storage";
 import { Application, ApplicationStatus } from "../lib/entity/Application";
 import { Job, JobStatus } from "../lib/entity/Job";
 import { User, UserRole } from "../lib/entity/User";
@@ -64,7 +64,10 @@ export const applyForJob = async (
       throw new AppError("You have already applied for this job", 409);
     }
 
-    const resumeText = await parseResume(req.file.path);
+    const resumeText = await parseResume(
+      req.file.buffer,
+      req.file.originalname,
+    );
     if (!resumeText) {
       throw new AppError("Unable to read resume", 400);
     }
@@ -74,13 +77,15 @@ export const applyForJob = async (
       job.title,
       job.description,
     );
+    const resumeKey = `${candidateId}/${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(req.file.originalname).toLowerCase()}`;
+    await uploadResumeFile(resumeKey, req.file.buffer, req.file.mimetype);
 
     const application = applicationRepository.create({
       candidate,
       job,
       status: ApplicationStatus.APPLIED,
 
-      resumePath: req.file.path,
+      resumePath: resumeKey,
       resumeOriginalName: req.file.originalname,
       resumeText,
       resumeSummary: analysis.summary,
@@ -583,22 +588,26 @@ export const getCandidateResume = async (
       throw new AppError("Resume not found for this application", 404);
     }
 
-    if (!fs.existsSync(application.resumePath)) {
+    const file = await downloadResumeFile(application.resumePath);
+    if (!file) {
       throw new AppError("Resume file does not exist", 404);
     }
 
-    const absolutePath = path.resolve(application.resumePath);
-
     const download = req.query.download === "true";
+    const name = application.resumeOriginalName || "resume.pdf";
+    const isPdf = path.extname(name).toLowerCase() === ".pdf";
 
-    if (download) {
-      return res.download(
-        absolutePath,
-        application.resumeOriginalName || "resume.pdf",
-      );
-    }
-
-    return res.sendFile(absolutePath);
+    res.setHeader(
+      "Content-Type",
+      isPdf
+        ? "application/pdf"
+        : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `${download ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(name)}`,
+    );
+    return res.send(file);
   } catch (error) {
     next(error);
   }
