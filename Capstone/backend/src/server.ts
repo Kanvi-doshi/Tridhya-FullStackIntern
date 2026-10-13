@@ -15,11 +15,11 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await AppDataSource.initialize();
-    for (let i = 0; i < 3; i++) {
-      const t = Date.now();
-      await AppDataSource.query("SELECT 1");
-      console.log("DB round trip:", Date.now() - t, "ms");
-    }
+    
+    await Promise.all(
+      Array.from({ length: 5 }, () => AppDataSource.query("SELECT 1")),
+    );
+    
     console.log("PostgreSQL connected successfully");
 
     const server = http.createServer(app);

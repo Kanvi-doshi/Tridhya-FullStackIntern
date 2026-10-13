@@ -5,6 +5,9 @@ import { User } from "../entity/User";
 import { verifyAccessToken } from "../services/jwt.services";
 import { AppError } from "./error.middleware";
 
+const userCache = new Map<string, { user: User; expires: number }>();
+export const clearCachedUser = (id: string) => userCache.delete(id);
+
 export const protect = async (
   req: Request,
   res: Response,
@@ -27,13 +30,25 @@ export const protect = async (
       throw new AppError("Invalid or expired access token", 401);
     }
 
-    const userRepository = AppDataSource.getRepository(User);
+    // const userRepository = AppDataSource.getRepository(User);
 
-    const user = await userRepository.findOne({
-      where: {
-        id: decoded.id,
-      },
-    });
+    // const user = await userRepository.findOne({
+    //   where: {
+    //     id: decoded.id,
+    //   },
+    // });
+
+    let cached = userCache.get(decoded.id);
+    if (!cached || cached.expires < Date.now()) {
+      const found = await AppDataSource.getRepository(User).findOne({
+        where: { id: decoded.id },
+      });
+      cached = found
+        ? { user: found, expires: Date.now() + 60_000 }
+        : undefined;
+      if (cached) userCache.set(decoded.id, cached);
+    }
+    const user = cached?.user;
 
     if (!user) {
       throw new AppError("User not found", 401);

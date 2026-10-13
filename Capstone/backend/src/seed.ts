@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 
 import { AppDataSource } from "./lib/config/db";
 import { User, UserRole } from "./lib/entity/User";

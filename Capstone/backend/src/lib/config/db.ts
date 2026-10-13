@@ -20,6 +20,6 @@ export const AppDataSource = new DataSource({
 
   extra: {
     max: 5,
-    idleTimeoutMillis: 30000,
+    idleTimeoutMillis: 300_000,
   },
 });

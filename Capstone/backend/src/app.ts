@@ -25,7 +25,6 @@ const app = express();
 const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim());
-// console.log(corsOrigins);
 app.use(
   cors({
     origin: corsOrigins,

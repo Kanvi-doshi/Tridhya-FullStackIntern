@@ -13,8 +13,6 @@ const attemptRepository = AppDataSource.getRepository(AssessmentAttempt);
 
 const expireAssessments = async () => {
   try {
-    // console.log("[Assessment Job] Checking expired assessments...");
-
     const attempts = await attemptRepository.find({
       where: {
         status: AssessmentStatus.IN_PROGRESS,
@@ -65,6 +63,4 @@ export const startAssessmentExpirationJob = () => {
   cron.schedule("* * * * *", async () => {
     await expireAssessments();
   });
-
-  // console.log("Assessment expiration job started");
 };

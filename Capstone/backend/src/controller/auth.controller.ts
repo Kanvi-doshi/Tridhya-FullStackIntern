@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -9,8 +9,16 @@ import {
 import { AppDataSource } from "../lib/config/db";
 import { User, UserRole } from "../lib/entity/User";
 import { AppError } from "../lib/middleware/error.middleware";
+import { clearCachedUser } from "../lib/middleware/auth.middleware";
 
 const userRepository = AppDataSource.getRepository(User);
+
+const isProd = process.env.NODE_ENV === "production";
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? ("none" as const) : ("strict" as const),
+};
 
 export const register = async (
   req: Request,
@@ -80,9 +88,7 @@ export const login = async (
     const refreshToken = generateRefreshToken(user);
 
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      ...refreshCookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -165,11 +171,7 @@ export const logout = async (
   next: NextFunction,
 ) => {
   try {
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+    res.clearCookie("refreshToken", refreshCookieOptions);
     return res.status(200).json({
       success: true,
       message: "Logout successful",
@@ -201,7 +203,7 @@ export const updateProfile = async (
       name,
       email,
     });
-
+    clearCachedUser(req.user!.id);
     const user = await userRepository.findOneBy({
       id: req.user!.id,
     });
