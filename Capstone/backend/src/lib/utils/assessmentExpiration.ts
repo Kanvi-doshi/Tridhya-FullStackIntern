@@ -63,4 +63,5 @@ export const startAssessmentExpirationJob = () => {
   cron.schedule("* * * * *", async () => {
     await expireAssessments();
   });
+  console.log("hii");
 };
