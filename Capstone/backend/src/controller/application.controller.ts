@@ -176,19 +176,46 @@ export const getMyApplications = async (
   next: NextFunction,
 ) => {
   try {
-    const applications = await applicationRepository.find({
-      where: {
-        candidate: {
-          id: req.user!.id,
-        },
-      },
-      relations: {
-        job: true,
-      },
-      order: {
-        appliedAt: "DESC",
-      },
-    });
+   const applications = await applicationRepository.find({
+     select: {
+       id: true,
+       status: true,
+       overallScore: true,
+       currentRound: true,
+       resumeOriginalName: true,
+       resumeSummary: true,
+       resumeSkills: true,
+       resumeExperience: true,
+       resumeEducation: true,
+       resumeStrengths: true,
+       resumeMissingSkills: true,
+       jobMatchScore: true,
+       appliedAt: true,
+       updatedAt: true,
+       job: {
+         id: true,
+         title: true,
+         description: true,
+         location: true,
+         experienceRequired: true,
+         skills: true,
+         status: true,
+         createdAt: true,
+         updatedAt: true,
+       },
+     },
+     where: {
+       candidate: {
+         id: req.user!.id,
+       },
+     },
+     relations: {
+       job: true,
+     },
+     order: {
+       appliedAt: "DESC",
+     },
+   });
 
     return res.status(200).json({
       success: true,

@@ -18,77 +18,80 @@ export const getDashboardAnalytics = async (
   next: NextFunction,
 ) => {
   try {
-    const totalJobs = await jobRepository.count();
-    const openJobs = await jobRepository.count({
-      where: {
-        status: JobStatus.OPEN,
-      },
-    });
+    const [jobMetrics, applicationMetrics, interviewMetrics] =
+      await Promise.all([
+        jobRepository
+          .createQueryBuilder("job")
+          .select("COUNT(job.id)", "total")
+          .addSelect("COUNT(job.id) FILTER (WHERE job.status = :open)", "open")
+          .setParameter("open", JobStatus.OPEN)
+          .getRawOne(),
 
-    const totalApplications = await applicationRepository.count();
-    const shortlistedCandidates = await applicationRepository.count({
-      where: {
-        status: ApplicationStatus.SHORTLISTED,
-      },
-    });
-    const interviewingCandidates = await applicationRepository.count({
-      where: {
-        status: ApplicationStatus.INTERVIEWING,
-      },
-    });
-    const selectedCandidates = await applicationRepository.count({
-      where: {
-        status: ApplicationStatus.SELECTED,
-      },
-    });
-    const rejectedCandidates = await applicationRepository.count({
-      where: {
-        status: ApplicationStatus.REJECTED,
-      },
-    });
+        applicationRepository
+          .createQueryBuilder("application")
+          .select("COUNT(application.id)", "total")
+          .addSelect(
+            "COUNT(application.id) FILTER (WHERE application.status = :shortlisted)",
+            "shortlisted",
+          )
+          .addSelect(
+            "COUNT(application.id) FILTER (WHERE application.status = :interviewing)",
+            "interviewing",
+          )
+          .addSelect(
+            "COUNT(application.id) FILTER (WHERE application.status = :selected)",
+            "selected",
+          )
+          .addSelect(
+            "COUNT(application.id) FILTER (WHERE application.status = :rejected)",
+            "rejected",
+          )
+          .addSelect("AVG(application.job_match_score)", "averageJobMatchScore")
+          .addSelect("AVG(application.overall_score)", "averageOverallScore")
+          .setParameters({
+            shortlisted: ApplicationStatus.SHORTLISTED,
+            interviewing: ApplicationStatus.INTERVIEWING,
+            selected: ApplicationStatus.SELECTED,
+            rejected: ApplicationStatus.REJECTED,
+          })
+          .getRawOne(),
 
-    const scoreResult = await applicationRepository
-      .createQueryBuilder("application")
-      .select("AVG(application.job_match_score)", "averageJobMatchScore")
-      .addSelect("AVG(application.overall_score)", "averageOverallScore")
-      .getRawOne();
-
-    const averageJobMatchScore = Number(
-      Number(scoreResult?.averageJobMatchScore || 0).toFixed(2),
-    );
-
-    const averageOverallScore = Number(
-      Number(scoreResult?.averageOverallScore || 0).toFixed(2),
-    );
-
-    const totalInterviews = await interviewAssignmentRepository.count();
-    const completedInterviews = await interviewAssignmentRepository.count({
-      where: {
-        status: InterviewAssignmentStatus.COMPLETED,
-      },
-    });
+        interviewAssignmentRepository
+          .createQueryBuilder("assignment")
+          .select("COUNT(assignment.id)", "total")
+          .addSelect(
+            "COUNT(assignment.id) FILTER (WHERE assignment.status = :completed)",
+            "completed",
+          )
+          .setParameter("completed", InterviewAssignmentStatus.COMPLETED)
+          .getRawOne(),
+      ]);
 
     return res.status(200).json({
       success: true,
       analytics: {
         jobs: {
-          total: totalJobs,
-          open: openJobs,
+          total: Number(jobMetrics?.total ?? 0),
+          open: Number(jobMetrics?.open ?? 0),
         },
         applications: {
-          total: totalApplications,
-          shortlisted: shortlistedCandidates,
-          interviewing: interviewingCandidates,
-          selected: selectedCandidates,
-          rejected: rejectedCandidates,
+          total: Number(applicationMetrics?.total ?? 0),
+          shortlisted: Number(applicationMetrics?.shortlisted ?? 0),
+          interviewing: Number(applicationMetrics?.interviewing ?? 0),
+          selected: Number(applicationMetrics?.selected ?? 0),
+          rejected: Number(applicationMetrics?.rejected ?? 0),
         },
         scores: {
-          averageJobMatchScore,
-          averageOverallScore,
+          averageJobMatchScore: Number(
+            Number(applicationMetrics?.averageJobMatchScore ?? 0).toFixed(2),
+          ),
+          averageOverallScore: Number(
+            Number(applicationMetrics?.averageOverallScore ?? 0).toFixed(2),
+          ),
         },
         interviews: {
-          total: totalInterviews,
-          completed: completedInterviews,
+          total: Number(interviewMetrics?.total ?? 0),
+          completed: Number(interviewMetrics?.completed ?? 0),
         },
       },
     });
