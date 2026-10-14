@@ -51,7 +51,7 @@ export async function notifyUsers(
 
     const gmailUser = process.env.EMAIL_FROM;
     const gmailAppPassword = process.env.APP_PASSWORD;
-    const frontendUrl = process.env.FRONTEND_URL;
+    const frontendUrl = process.env.VERCEL_URL;
 
     if (!gmailUser || !gmailAppPassword || !frontendUrl) {
       console.warn(
