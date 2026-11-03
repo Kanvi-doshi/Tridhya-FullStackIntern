@@ -3,6 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, BriefcaseBusiness, MapPin, Sparkles } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/authContext";
+import {
+  getErrorMessage,
+  useJob,
+  useMyApplications,
+} from "../../component/hooks/queries";
 
 interface Job {
   id: string;
@@ -19,36 +24,13 @@ const CanJobDetails = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [alreadyApplied, setAlreadyApplied] = useState(false);
-
-  useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        const [jobResponse, applicationResponse] = await Promise.all([
-          api.get(`/job/${id}`),
-          api.get("/application/my"),
-        ]);
-
-        const currentJob = jobResponse.data.job;
-        setJob(currentJob);
-        const applications = applicationResponse.data.applications || [];
-        const hasApplied = applications.some(
-          (application: any) => application.job?.id === currentJob.id,
-        );
-
-        setAlreadyApplied(hasApplied);
-      } catch (error: any) {
-        setError(error.response?.data?.message || "Failed to load job");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJob();
-  }, [id]);
+  const { data: job, isLoading: jobLoading, error: jobError } = useJob<Job>(id);
+  const { data: applications = [], isLoading: applicationsLoading } =
+    useMyApplications<{ job?: { id: string } }>();
+  const loading = jobLoading || applicationsLoading;
+  const alreadyApplied =
+    !!job && applications.some((application) => application.job?.id === job.id);
+  const error = jobError ? getErrorMessage(jobError, "Failed to load job") : "";
 
   if (loading) {
     return (

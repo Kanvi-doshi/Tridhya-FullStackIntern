@@ -8,10 +8,13 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useJobApplications,
+} from "../../component/hooks/queries";
 
 interface Application {
   id: string;
@@ -37,43 +40,21 @@ interface Application {
 const JobApplications = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const hrRevision = useContext(HRRealtimeContext);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const {
+    data: applications = [],
+    isLoading: loading,
+    error: loadError,
+  } = useJobApplications<Application>(jobId);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!jobId) {
-      setError("Job ID is missing");
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    const fetchApplications = async () => {
-
-      try {
-        const response = await api.get(`/application/job/${jobId}`);
-
-        if (!cancelled) {
-          setApplications(response.data.applications || []);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to refresh job applications.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    void fetchApplications();
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId, hrRevision]);
+  const error =
+    applications.length === 0 && (!jobId || loadError)
+      ? !jobId
+        ? "Job ID is missing"
+        : getErrorMessage(loadError, "Unable to load job applications.")
+      : "";
 
   const filteredApplications = applications.filter((application) => {
     const query = search.trim().toLowerCase();

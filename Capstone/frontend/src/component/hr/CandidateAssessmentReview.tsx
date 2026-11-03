@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState } from "react";
-import axios from "axios";
-import api from "../../services/api";
+import { useState } from "react";
+import {
+  getErrorMessage,
+  useApplicationAssessments,
+  useRefreshData,
+} from "../../component/hooks/queries";
 import WrittenAnswerEvaluation from "./WrittenAnswerEvaluation";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
 
 type Numeric = number | string;
 
@@ -83,45 +85,21 @@ export default function CandidateAssessmentReview({
   applicationId: string;
   onEvaluated?: () => void;
 }) {
-  const [rounds, setRounds] = useState<ReviewRound[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = useRefreshData();
+  const {
+    data: rounds = [],
+    isLoading: loading,
+    isFetching,
+    error: loadError,
+    refetch,
+  } = useApplicationAssessments<ReviewRound>(applicationId);
+
+  const error = loadError
+    ? getErrorMessage(loadError, "Unable to load assessment review.")
+    : "";
+
   const [evaluationBusy, setEvaluationBusy] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const hrRevision = useContext(HRRealtimeContext);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadReview = async () => {
-      setError("");
-
-      try {
-        const response = await api.get<{ rounds: ReviewRound[] }>(
-          `/application/${applicationId}/assessments`,
-        );
-        if (!cancelled) {
-          setRounds(response.data.rounds);
-        }
-      } catch (error: unknown) {
-        if (!cancelled) {
-          setError(
-            axios.isAxiosError<{ message?: string }>(error)
-              ? error.response?.data?.message ||
-                  "Unable to load assessment review."
-              : "Unable to load assessment review.",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void loadReview();
-    return () => {
-      cancelled = true;
-    };
-  }, [applicationId, refreshKey, hrRevision]);
-
   const passedCount = rounds.filter(
     (round) => round.attempt?.status === "PASSED",
   ).length;
@@ -141,10 +119,10 @@ export default function CandidateAssessmentReview({
         <button
           type="button"
           disabled={loading || evaluationBusy}
-          onClick={() => setRefreshKey((value) => value + 1)}
+          onClick={() => void refetch()}
           className="rounded-lg border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-600 hover:bg-violet-50 disabled:opacity-50"
         >
-          {loading ? "Loading..." : "Refresh"}
+          {isFetching ? "Loading..." : "Refresh"}
         </button>
       </div>
 
@@ -356,7 +334,8 @@ export default function CandidateAssessmentReview({
                                       setSuccessMessage(
                                         "Evaluation saved. Refreshing assessment results...",
                                       );
-                                      setRefreshKey((value) => value + 1);
+                                      void refresh.applications(); // review, status dropdown, HR lists and details
+                                      void refresh.attempts(); // candidate badges
                                       onEvaluated?.();
                                     }}
                                   />

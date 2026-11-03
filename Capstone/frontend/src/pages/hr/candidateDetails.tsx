@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -17,7 +17,12 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import CandidateAssessmentReview from "../../component/hr/CandidateAssessmentReview";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useApplication,
+  useApplicationFeedback,
+  useRefreshData,
+} from "../../component/hooks/queries";
 
 interface Candidate {
   id: string;
@@ -82,68 +87,31 @@ interface InterviewFeedback {
 const CandidateDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const hrRevision = useContext(HRRealtimeContext);
-  const [application, setApplication] = useState<Application | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [feedback, setFeedback] = useState<InterviewFeedback[]>([]);
-  const [feedbackLoading, setFeedbackLoading] = useState(true);
-  const [feedbackError, setFeedbackError] = useState("");
-  const [action, setAction] = useState<"score" | "ai" | "report" | "assessmentReport" | null>(null);
+  const refresh = useRefreshData();
+
+  const {
+    data: application = null,
+    isLoading: loading,
+    error: loadError,
+  } = useApplication<Application>(id);
+
+  const {
+    data: feedback = [],
+    isLoading: feedbackLoading,
+    error: feedbackLoadError,
+  } = useApplicationFeedback<InterviewFeedback>(id ?? "", !!id);
+
+  const error = loadError
+    ? getErrorMessage(loadError, "Unable to load candidate details.")
+    : "";
+  const feedbackError = feedbackLoadError
+    ? "Unable to load interview feedback. Reload the page."
+    : "";
+
+  const [action, setAction] = useState<
+    "score" | "ai" | "report" | "assessmentReport" | null
+  >(null);
   const [actionMessage, setActionMessage] = useState("");
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-
-    const fetchCandidate = async () => {
-      try {
-        const response = await api.get(`/application/${id}`);
-
-        if (!cancelled) {
-          setApplication(response.data.application);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to load candidate details.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void fetchCandidate();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, hrRevision]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadFeedback = async () => {
-      setFeedbackError("");
-      try {
-        const response = await api.get(`/interview-feedback/application/${id}`);
-        if (!cancelled) {
-          setFeedback(response.data.feedback || []);
-        }
-      } catch {
-        if (!cancelled) {
-          setFeedbackError(
-            "Unable to load interview feedback. Reload the page.",
-          );
-        }
-      } finally {
-        if (!cancelled) setFeedbackLoading(false);
-      }
-    };
-    if (id) void loadFeedback();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, hrRevision]);
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -161,20 +129,10 @@ const CandidateDetails = () => {
         return "bg-slate-100 text-slate-600";
     }
   };
-  const refreshApplicationStats = async () => {
-    if (!id) return;
 
-    try {
-      const response = await api.get(`/application/${id}`);
-      setApplication(response.data.application);
-    } catch {
-      setError(
-        "Evaluation was saved, but candidate details could not refresh. Reload the page.",
-      );
-    }
-  };
-
-  const handleEvaluationAction = async (type: "score" | "ai" | "report" | "assessmentReport") => {
+  const handleEvaluationAction = async (
+    type: "score" | "ai" | "report" | "assessmentReport",
+  ) => {
     if (!id || action) return;
 
     setAction(type);
@@ -183,7 +141,9 @@ const CandidateDetails = () => {
     try {
       if (type === "report" || type === "assessmentReport") {
         const response = await api.get(`/reports/candidate/${id}`, {
-          params: { stage: type === "assessmentReport" ? "assessment" : "final" },
+          params: {
+            stage: type === "assessmentReport" ? "assessment" : "final",
+          },
           responseType: "blob",
         });
 
@@ -210,7 +170,7 @@ const CandidateDetails = () => {
             ? "Final score calculated."
             : "AI summary generated.",
         );
-        await refreshApplicationStats();
+        await Promise.all([refresh.applications(), refresh.analytics()]);
       }
     } catch (error: unknown) {
       let message = "Unable to complete this action.";
@@ -223,9 +183,8 @@ const CandidateDetails = () => {
             const parsed = JSON.parse(await data.text());
             message = parsed.message || message;
           } catch {
-            setError(
-              "Evaluation action, but candidate details could not refresh. Reload the page.",
-            );
+            message =
+              "Evaluation action, but candidate details could not refresh. Reload the page.";
           }
         } else {
           message = data?.message || error.message;
@@ -248,7 +207,7 @@ const CandidateDetails = () => {
     );
   }
 
-  if (error || !application) {
+  if (!application) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
         <p className="text-red-500">{error || "Candidate not found"}</p>
@@ -470,17 +429,21 @@ const CandidateDetails = () => {
         </Section>
 
         <div className="mt-6 flex justify-end">
-          <button type="button" disabled={action !== null}
+          <button
+            type="button"
+            disabled={action !== null}
             onClick={() => void handleEvaluationAction("assessmentReport")}
-            className="flex items-center gap-2 rounded-lg border border-violet-300 bg-white px-4 py-2 text-sm font-semibold text-violet-600 disabled:opacity-50">
+            className="flex items-center gap-2 rounded-lg border border-violet-300 bg-white px-4 py-2 text-sm font-semibold text-violet-600 disabled:opacity-50"
+          >
             <FileText size={17} />
-            {action === "assessmentReport" ? "Downloading..." : "Download Assessment Report"}
+            {action === "assessmentReport"
+              ? "Downloading..."
+              : "Download Assessment Report"}
           </button>
         </div>
         <CandidateAssessmentReview
           key={application.id}
           applicationId={application.id}
-          onEvaluated={() => void refreshApplicationStats()}
         />
         <Section title="Final Interview Feedback">
           {feedbackLoading ? (

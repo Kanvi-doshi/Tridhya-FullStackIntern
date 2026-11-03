@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -10,6 +10,12 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/authContext";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getErrorMessage,
+  queryKeys,
+  useJob,
+} from "../../component/hooks/queries";
 
 interface Job {
   id: string;
@@ -21,29 +27,18 @@ interface Job {
 const ApplyJob = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const [job, setJob] = useState<Job | null>(null);
+  const {
+    data: job,
+    isLoading: pageLoading,
+    error: jobError,
+  } = useJob<Job>(id);
   const [resume, setResume] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        const response = await api.get(`/job/${id}`);
-        setJob(response.data.job);
-      } catch (error: any) {
-        setError(error.response?.data?.message || "Failed to load job");
-      } finally {
-        setPageLoading(false);
-      }
-    };
-
-    fetchJob();
-  }, [id]);
 
   const handleResume = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,7 +59,7 @@ const ApplyJob = () => {
     setResume(file);
   };
 
-  const handleApply = async (e:React.FormEvent<HTMLFormElement>) => {
+  const handleApply = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!resume) {
@@ -77,10 +72,12 @@ const ApplyJob = () => {
       setError("");
 
       const formData = new FormData();
-
       formData.append("resume", resume);
 
       await api.post(`/application/job/${id}/apply`, formData);
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.myApplications,
+      });
       setSuccess(true);
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to submit application");
@@ -100,7 +97,11 @@ const ApplyJob = () => {
   if (!job) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-red-500">{error || "Job not found"}</p>
+        <p className="text-red-500">
+          {jobError
+            ? getErrorMessage(jobError, "Failed to load job")
+            : "Job not found"}
+        </p>
       </div>
     );
   }

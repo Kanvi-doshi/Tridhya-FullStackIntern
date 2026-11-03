@@ -10,9 +10,16 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import {
+  getErrorMessage,
+  queryKeys,
+  useJobs,
+  useRefreshData,
+} from "../../component/hooks/queries";
+import { queryClient } from "../../component/queryClient";
 
 interface Job {
   id: string;
@@ -34,34 +41,18 @@ interface Job {
 
 const HRJobs = () => {
   const navigate = useNavigate();
-
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const {
+    data: jobs = [],
+    isLoading: loading,
+    error: loadError,
+  } = useJobs<Job>();
+  const refresh = useRefreshData();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await api.get("/job");
-
-      setJobs(response.data.jobs || []);
-    } catch (error: any) {
-      console.error("Failed to fetch jobs:", error);
-
-      setError(error.response?.data?.message || "Failed to load jobs");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load jobs")
+    : "";
 
   const handleDelete = async (id: string, title: string) => {
     const confirmed = window.confirm(
@@ -75,8 +66,12 @@ const HRJobs = () => {
     try {
       setDeletingId(id);
       await api.delete(`/job/${id}`);
-
-      setJobs((previousJobs) => previousJobs.filter((job) => job.id !== id));
+      queryClient.removeQueries({ queryKey: queryKeys.job(id) });
+      await Promise.all([
+        refresh.jobs(),
+        refresh.applications(),
+        refresh.rounds(),
+      ]);
     } catch (error: any) {
       console.error("Failed to delete job:", error);
 
@@ -92,7 +87,7 @@ const HRJobs = () => {
     const matchesSearch =
       job.title.toLowerCase().includes(query) ||
       job.location.toLowerCase().includes(query) ||
-      job.skills.toLowerCase().includes(query);
+      (job.skills ?? "").toLowerCase().includes(query);
 
     const matchesStatus = statusFilter === "ALL" || job.status === statusFilter;
 

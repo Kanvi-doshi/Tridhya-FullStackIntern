@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Sparkles } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/authContext";
+import { queryClient } from "../../component/queryClient";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -28,8 +29,10 @@ const Login = () => {
 
       const { token, user } = response.data;
 
+      queryClient.clear();
       login(token, user);
       navigate("/dashboard");
+      
     } catch (error: any) {
       setError(error.response?.data?.message || "Login failed");
     } finally {

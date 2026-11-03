@@ -9,10 +9,10 @@ import {
   User,
   Video,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import { useInterviewerInterview } from "../../component/hooks/queries";
 
 interface Assignment {
   id: string;
@@ -52,7 +52,7 @@ interface Assignment {
     name?: string;
     title?: string;
     roundNumber?: number;
-    type?: string;
+    type?: string;  
   };
 }
 
@@ -85,52 +85,22 @@ const InterviewDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const revision = useContext(HRRealtimeContext);
-  const [details, setDetails] = useState<InterviewResponse | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const {
+    data: details = null,
+    isLoading: loading,
+    isFetching,
+    error: loadError,
+    refetch,
+  } = useInterviewerInterview<InterviewResponse>(id);
+
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!id) {
-      setError("Interview ID is missing.");
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchInterview = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get<InterviewResponse>(
-          `/interviewer/interviews/${id}`,
-        );
-
-        if (!cancelled) {
-          setDetails(response.data);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setDetails(null);
-          setError(
-            "This interview is unavailable or no longer assigned to you.",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    void fetchInterview();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, revision, refreshKey]);
+  const error = !id
+    ? "Interview ID is missing."
+    : loadError
+      ? "This interview is unavailable or no longer assigned to you."
+      : "";
 
   if (loading) {
     return (
@@ -140,7 +110,7 @@ const InterviewDetails = () => {
     );
   }
 
-  if (error || !details || details.interview.id !== id) {
+  if (!details || details.interview.id !== id) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
@@ -222,21 +192,28 @@ const InterviewDetails = () => {
             <Info
               icon={<CalendarDays size={17} />}
               label="Ends"
-              value={assignment.endsAt
-                ? new Date(assignment.endsAt).toLocaleString("en-IN")
-                : "Not specified"}
+              value={
+                assignment.endsAt
+                  ? new Date(assignment.endsAt).toLocaleString("en-IN")
+                  : "Not specified"
+              }
             />
             <Info
               icon={<MapPin size={17} />}
               label="Location"
               value={assignment.location}
             />
-            {meetingUrl && !["CANCELLED", "COMPLETED"].includes(assignment.status) && (
-              <a href={meetingUrl} target="_blank" rel="noopener noreferrer"
-                className="mb-4 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm text-white">
-                <Video size={17} /> Join Meeting
-              </a>
-            )}
+            {meetingUrl &&
+              !["CANCELLED", "COMPLETED"].includes(assignment.status) && (
+                <a
+                  href={meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-4 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm text-white"
+                >
+                  <Video size={17} /> Join Meeting
+                </a>
+              )}
 
             <Info
               icon={<Video size={17} />}
@@ -288,7 +265,9 @@ const InterviewDetails = () => {
 
         <div className="mt-6">
           <Section title="Candidate Resume Analysis">
-            <button type="button" disabled={resumeLoading || assignment.status === "CANCELLED"}
+            <button
+              type="button"
+              disabled={resumeLoading || assignment.status === "CANCELLED"}
               onClick={async () => {
                 setResumeLoading(true);
                 setResumeError("");
@@ -300,7 +279,8 @@ const InterviewDetails = () => {
                   const url = URL.createObjectURL(response.data);
                   const link = document.createElement("a");
                   link.href = url;
-                  link.download = application.resumeOriginalName || "resume.pdf";
+                  link.download =
+                    application.resumeOriginalName || "resume.pdf";
                   document.body.appendChild(link);
                   link.click();
                   link.remove();
@@ -311,11 +291,16 @@ const InterviewDetails = () => {
                   setResumeLoading(false);
                 }
               }}
-              className="mb-4 flex items-center gap-2 rounded-lg border border-violet-200 px-4 py-2 text-sm text-violet-600 disabled:opacity-50">
+              className="mb-4 flex items-center gap-2 rounded-lg border border-violet-200 px-4 py-2 text-sm text-violet-600 disabled:opacity-50"
+            >
               <Download size={17} />
               {resumeLoading ? "Downloading..." : "Download Resume"}
             </button>
-            {resumeError && <p role="alert" className="mb-3 text-sm text-red-600">{resumeError}</p>}
+            {resumeError && (
+              <p role="alert" className="mb-3 text-sm text-red-600">
+                {resumeError}
+              </p>
+            )}
             <p className="text-sm leading-6 text-slate-500">
               {application.resumeSummary || "Resume analysis is not available."}
             </p>
@@ -343,11 +328,16 @@ const InterviewDetails = () => {
         <div className="mt-6">
           <Section title="Assessment Results">
             {details.assessments.length === 0 ? (
-              <p className="text-sm text-slate-500">No assessment attempts available.</p>
+              <p className="text-sm text-slate-500">
+                No assessment attempts available.
+              </p>
             ) : (
               <div className="grid gap-3 md:grid-cols-3">
                 {details.assessments.map((assessment) => (
-                  <div key={assessment.id} className="rounded-lg bg-slate-50 p-4">
+                  <div
+                    key={assessment.id}
+                    className="rounded-lg bg-slate-50 p-4"
+                  >
                     <p className="font-semibold text-slate-800">
                       Round {assessment.roundNumber}: {assessment.title}
                     </p>
@@ -355,10 +345,14 @@ const InterviewDetails = () => {
                       {assessment.status.replaceAll("_", " ")}
                     </p>
                     <p className="mt-2 text-sm text-slate-600">
-                      Score: {assessment.score == null ? "Pending" : `${Number(assessment.score).toFixed(1)}%`}
+                      Score:{" "}
+                      {assessment.score == null
+                        ? "Pending"
+                        : `${Number(assessment.score).toFixed(1)}%`}
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                      Marks: {assessment.obtainedMarks ?? "?"} / {assessment.totalMarks ?? "?"}
+                      Marks: {assessment.obtainedMarks ?? "?"} /{" "}
+                      {assessment.totalMarks ?? "?"}
                     </p>
                   </div>
                 ))}
@@ -372,14 +366,25 @@ const InterviewDetails = () => {
             <Section title="Submitted Feedback">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { label: "Technical", value: details.feedback.technicalRating },
-                  { label: "Communication", value: details.feedback.communicationRating },
-                  { label: "Problem Solving", value: details.feedback.problemSolvingRating },
+                  {
+                    label: "Technical",
+                    value: details.feedback.technicalRating,
+                  },
+                  {
+                    label: "Communication",
+                    value: details.feedback.communicationRating,
+                  },
+                  {
+                    label: "Problem Solving",
+                    value: details.feedback.problemSolvingRating,
+                  },
                   { label: "Overall", value: details.feedback.overallRating },
                 ].map(({ label, value }) => (
                   <div key={label} className="rounded-lg bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">{label}</p>
-                    <p className="mt-1 font-semibold">{Number(value).toFixed(1)} / 5</p>
+                    <p className="mt-1 font-semibold">
+                      {Number(value).toFixed(1)} / 5
+                    </p>
                   </div>
                 ))}
               </div>
@@ -393,7 +398,9 @@ const InterviewDetails = () => {
               ].map(({ label, value }) => (
                 <div key={label} className="mt-4">
                   <p className="text-sm font-semibold">{label}</p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-slate-500">{value || "Not provided"}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-slate-500">
+                    {value || "Not provided"}
+                  </p>
                 </div>
               ))}
             </Section>
@@ -403,10 +410,11 @@ const InterviewDetails = () => {
         <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
           <button
             type="button"
-            onClick={() => setRefreshKey((value) => value + 1)}
+            disabled={isFetching}
+            onClick={() => void refetch()}
             className="rounded-lg border border-violet-200 px-4 py-2 text-sm text-violet-600"
           >
-            Refresh Status
+            {isFetching ? "Refreshing..." : "Refresh Status"}
           </button>
 
           {!details?.feedback && (

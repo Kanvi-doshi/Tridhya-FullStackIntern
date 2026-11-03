@@ -1,7 +1,6 @@
-import { useContext, useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import { useJobRounds, useMyAttempts } from "../../component/hooks/queries";
 
 interface Round {
   id: string;
@@ -24,47 +23,29 @@ export default function AssessmentRounds({
 }: {
   jobId: string;
   applicationStatus: string;
-}) {
-  const revision = useContext(HRRealtimeContext);
-  const [rounds, setRounds] = useState<Round[]>([]);
-  const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  }) {
+  const {
+    data: allRounds = [],
+    isLoading: roundsLoading,
+    error: roundsError,
+  } = useJobRounds<Round>(jobId);
+  const {
+    data: attempts = [],
+    isLoading: attemptsLoading,
+    error: attemptsError,
+  } = useMyAttempts<AttemptSummary>(jobId);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loading = roundsLoading || attemptsLoading;
+  const error =
+    roundsError || attemptsError ? "Unable to load assessment rounds." : "";
 
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const [roundResponse, attemptResponse] = await Promise.all([
-          api.get(`/interview-round/job/${jobId}`),
-          api.get(`/assessment/job/${jobId}/my`),
-        ]);
-
-        if (!cancelled) {
-          setRounds(
-            (roundResponse.data.rounds as Round[])
-              .filter((round) => round.isActive)
-              .sort((a, b) => a.roundNumber - b.roundNumber),
-          );
-          setAttempts(attemptResponse.data.attempts || []);
-        }
-      } catch {
-        if (!cancelled) setError("Unable to load assessment rounds.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId, applicationStatus, revision]);
+  const rounds = useMemo(
+    () =>
+      allRounds
+        .filter((round) => round.isActive)
+        .sort((a, b) => a.roundNumber - b.roundNumber),
+    [allRounds],
+  );
 
   return (
     <section className="my-6 rounded-xl border border-slate-200 bg-white p-5">

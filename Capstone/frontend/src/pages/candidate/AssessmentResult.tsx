@@ -9,10 +9,12 @@ import {
   Trophy,
   XCircle,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useAssessmentResult,
+} from "../../component/hooks/queries";
+
 
 interface AssessmentResultData {
   id: string;
@@ -33,7 +35,7 @@ interface AnswerResult {
   questionId: string;
   question: string;
   type: string;
- answerText: string | null;
+  answerText: string | null;
   isCorrect: boolean | null;
   marksObtained: number | null;
   passedTestCases: number | null;
@@ -43,40 +45,19 @@ interface AnswerResult {
 const AssessmentResult = () => {
   const { attemptId } = useParams();
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-  const [result, setResult] = useState<AssessmentResultData | null>(null);
-  const [answers, setAnswers] = useState<AnswerResult[]>([]);
- const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const {
+    data,
+    isLoading: loading,
+    error: loadError,
+  } = useAssessmentResult<AssessmentResultData, AnswerResult>(attemptId);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchResult = async () => {
-      if (!attemptId) {
-        setError("Assessment attempt ID is missing");
-        if (!cancelled) setLoading(false);
-        return;
-      }
-      try {
-        setLoading(true);
-        setError("");
-        const response = await api.get(`/assessment/${attemptId}/result`);
-        if (cancelled) return;
-        setResult(response.data.result);
-        setAnswers(response.data.answers || []);
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error("Failed to load result:", error);
-        setError(
-          error.response?.data?.message || "Failed to load assessment result",
-        );
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchResult();
-    return () => { cancelled = true; };
-  }, [attemptId, revision]);
+  const result = data?.result ?? null;
+  const answers = data?.answers ?? [];
+  const error = !attemptId
+    ? "Assessment attempt ID is missing"
+    : loadError
+      ? getErrorMessage(loadError, "Failed to load assessment result")
+      : "";
 
   if (loading) {
     return (

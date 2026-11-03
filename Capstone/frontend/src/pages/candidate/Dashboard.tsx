@@ -11,12 +11,18 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
 import NotificationBell from "../../component/NotificationBell";
+import { useMemo } from "react";
+import {
+  getErrorMessage,
+  useJobRounds,
+  useMyApplications,
+  useMyAttempts,
+  useMyInterviews,
+} from "../../component/hooks/queries";
 
 interface Application {
   id: string;
@@ -86,47 +92,18 @@ interface AssessmentRound {
 
 const AssessmentStatus = ({ jobId }: { jobId: string }) => {
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [rounds, setRounds] = useState<AssessmentRound[]>([]);
-  const [attempts, setAttempts] = useState<AssessmentAttempt[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchAssessmentStatus = async () => {
-      try {
-        const [roundResponse, attemptResponse] = await Promise.all([
-          api.get(`/interview-round/job/${jobId}`),
-          api.get(`/assessment/job/${jobId}/my`),
-        ]);
-
-        const assessmentRounds = (roundResponse.data.rounds || [])
-          .filter(
-            (round: AssessmentRound) =>
-              round.isActive && round.type !== "INTERVIEW",
-          )
-          .sort(
-            (a: AssessmentRound, b: AssessmentRound) =>
-              a.roundNumber - b.roundNumber,
-          );
-
-        if (cancelled) return;
-        setRounds(assessmentRounds);
-        setAttempts(attemptResponse.data.attempts || []);
-      } catch (error) {
-        if (cancelled) return;
-        console.error("Failed to load assessment status:", error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchAssessmentStatus();
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId, revision]);
+  const { data: allRounds = [], isLoading: roundsLoading } =
+    useJobRounds<AssessmentRound>(jobId);
+  const { data: attempts = [], isLoading: attemptsLoading } =
+    useMyAttempts<AssessmentAttempt>(jobId);
+  const loading = roundsLoading || attemptsLoading;
+  const rounds = useMemo(
+    () =>
+      allRounds
+        .filter((round) => round.isActive && round.type !== "INTERVIEW")
+        .sort((a, b) => a.roundNumber - b.roundNumber),
+    [allRounds],
+  );
 
   if (loading || rounds.length === 0) {
     return null;
@@ -246,51 +223,27 @@ const AssessmentStatus = ({ jobId }: { jobId: string }) => {
 const CandidateDash = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [interviews, setInterviews] = useState<Interview[]>([]);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(
     null,
   );
   const [copiedMeetingCode, setCopiedMeetingCode] = useState(false);
   const [copyError, setCopyError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const [applicationRes, interviewRes] = await Promise.all([
-          api.get("/application/my"),
-          api.get("/interview-assignment/candidate/my"),
-        ]);
-
-        if (cancelled) return;
-        setApplications(applicationRes.data.applications || []);
-        setInterviews(interviewRes.data.assignments || []);
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error("Failed to load candidate dashboard:", error);
-
-        setError(
-          error.response?.data?.message || "Failed to load candidate dashboard",
-        );
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-    return () => {
-      cancelled = true;
-    };
-  }, [revision]);
-
+  const {
+    data: applications = [],
+    isLoading: applicationsLoading,
+    error: applicationsError,
+  } = useMyApplications<Application>();
+  const {
+    data: interviews = [],
+    isLoading: interviewsLoading,
+    error: interviewsError,
+  } = useMyInterviews<Interview>();
+  const loading = applicationsLoading || interviewsLoading;
+  const loadError = applicationsError || interviewsError;
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load candidate dashboard")
+    : "";
   const totalApplications = applications.length;
 
   const inProgress = applications.filter((application) =>

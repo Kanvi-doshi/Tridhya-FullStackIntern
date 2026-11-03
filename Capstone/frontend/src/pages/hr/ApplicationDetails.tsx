@@ -13,11 +13,17 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 import ApplicationStatusSelect from "../../component/hr/ApplicationStatusSelect";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  queryKeys,
+  useApplication,
+  useRefreshData,
+} from "../../component/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Candidate {
   id: string;
@@ -69,43 +75,22 @@ interface Application {
 const HRApplicationDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const hrRevision = useContext(HRRealtimeContext);
-  const [application, setApplication] = useState<Application | null>(null);
+  const queryClient = useQueryClient();
+  const refresh = useRefreshData();
 
-  const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  const [error, setError] = useState("");
+  const {
+    data: application = null,
+    isLoading: loading,
+    error: loadError,
+  } = useApplication<Application>(id);
 
-  useEffect(() => {
-    if (!id) {
-      setError("Application ID is missing");
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-
-    const fetchApplication = async () => {
-      try {
-        const response = await api.get(`/application/${id}`);
-        if (!cancelled) {
-          setApplication(response.data.application);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to refresh application details.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void fetchApplication();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, hrRevision]);
+  const error = !id
+    ? "Application ID is missing"
+    : loadError
+      ? getErrorMessage(loadError, "Unable to load application details")
+      : "";
 
   const handleStatusChange = async (newStatus: string) => {
     if (!application) return;
@@ -119,15 +104,17 @@ const HRApplicationDetails = () => {
           status: newStatus,
         },
       );
-
-      setApplication((previous) =>
-        previous
-          ? {
-              ...previous,
-              status: response.data.application?.status || newStatus,
-            }
-          : previous,
+      queryClient.setQueryData<Application>(
+        queryKeys.application(application.id),
+        (previous) =>
+          previous
+            ? {
+                ...previous,
+                status: response.data.application?.status || newStatus,
+              }
+            : previous,
       );
+      void refresh.applications();
     } catch (error: any) {
       console.error("Failed to update status:", error);
 

@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { io } from "socket.io-client";
 import api from "../services/api";
@@ -9,6 +10,7 @@ export const HRRealtimeContext = createContext(0);
 export function HRRealtimeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [revision, setRevision] = useState(0);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!user) return;
@@ -21,7 +23,7 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
     const socket = io(import.meta.env.VITE_API_URL ?? "http://localhost:5000", {
       autoConnect: false,
       withCredentials: true,
-      transports:["websocket"],
+      transports: ["websocket"],
       reconnection: false,
     });
 
@@ -30,7 +32,9 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
       clearTimeout(refreshTimer);
 
       refreshTimer = setTimeout(() => {
-        if (!stopped) setRevision((value) => value + 1);
+        if (stopped) return;
+        setRevision((value) => value + 1);
+        void queryClient.invalidateQueries();
       }, 250);
       console.log("refresh");
     };
@@ -60,7 +64,7 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        console.log("re-connect check failed",error);
+        console.log("re-connect check failed", error);
         retry();
       } finally {
         connecting = false;
@@ -115,7 +119,7 @@ export function HRRealtimeProvider({ children }: { children: ReactNode }) {
       socket.removeAllListeners();
       socket.disconnect();
     };
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.role, queryClient]);
 
   return (
     <HRRealtimeContext.Provider value={revision}>

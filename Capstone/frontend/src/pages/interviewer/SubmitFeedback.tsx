@@ -1,40 +1,29 @@
 import { ArrowLeft, MessageSquareText, Send } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  useInterviewerInterview,
+  useRefreshData,
+} from "../../component/hooks/queries";
 import type { InterviewResponse } from "./InterviewDetails";
 
 const SubmitFeedback = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-  const [availability, setAvailability] = useState<InterviewResponse | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [checkedKey, setCheckedKey] = useState("");
-  const [availabilityError, setAvailabilityError] = useState("");
-  const requestKey = `${id}:${revision}:${refreshKey}`;
+  const refresh = useRefreshData();
 
-  useEffect(() => {
-    let cancelled = false;
-    api.get<InterviewResponse>(`/interviewer/interviews/${id}`)
-      .then(({ data }) => {
-        if (!cancelled) {
-          setAvailability(data);
-          setAvailabilityError("");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAvailability(null);
-          setAvailabilityError("Unable to load this interview or it is no longer assigned to you.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setCheckedKey(requestKey);
-      });
-    return () => { cancelled = true; };
-  }, [id, requestKey]);
+  const {
+    data: availability = null,
+    isLoading: checking,
+    isFetching,
+    error: loadError,
+    refetch,
+  } = useInterviewerInterview<InterviewResponse>(id);
+
+  const availabilityError = loadError
+    ? "Unable to load this interview or it is no longer assigned to you."
+    : "";
 
   const [technicalRating, setTechnicalRating] = useState(3);
   const [communicationRating, setCommunicationRating] = useState(3);
@@ -50,7 +39,7 @@ const SubmitFeedback = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (submitting || checkedKey !== requestKey || !availability?.canSubmitFeedback) return;
+    if (submitting || checking || !availability?.canSubmitFeedback) return;
 
     if (!recommendation) {
       setError("Please select a recommendation");
@@ -71,35 +60,47 @@ const SubmitFeedback = () => {
         recommendation,
       });
 
+      // Detail page, feedback history, dashboard counts, and HR's
+      // feedback / status-eligibility checks all read these keys.
+      await Promise.all([refresh.interviews(), refresh.applications()]);
+
       navigate(`/interview/${id}`, { replace: true });
     } catch (error: any) {
-      console.error("Failed to submit feedback:", error);
-
       setError(error.response?.data?.message || "Failed to submit feedback");
-      setRefreshKey((value) => value + 1);
+      void refetch(); // the interview may have changed state
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (checkedKey !== requestKey || !availability?.canSubmitFeedback) {
+  if (checking || !availability?.canSubmitFeedback) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
         <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6">
           <h1 className="font-bold text-slate-800">Interview Feedback</h1>
           <p className="mt-3 text-sm text-slate-600">
-            {checkedKey !== requestKey
+            {checking
               ? "Checking feedback availability..."
-              : availabilityError || availability?.feedbackMessage || "Feedback is unavailable."}
+              : availabilityError ||
+                availability?.feedbackMessage ||
+                "Feedback is unavailable."}{" "}
           </p>
           <div className="mt-5 flex gap-3">
-            <button type="button" onClick={() => navigate(`/interview/${id}`)}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-white">
-              {availability?.feedback ? "View Submitted Feedback" : "Back to Interview"}
+            <button
+              type="button"
+              onClick={() => navigate(`/interview/${id}`)}
+              className="rounded-lg bg-violet-600 px-4 py-2 text-white"
+            >
+              {availability?.feedback
+                ? "View Submitted Feedback"
+                : "Back to Interview"}
             </button>
-            <button type="button" onClick={() => setRefreshKey((value) => value + 1)}
-              disabled={checkedKey !== requestKey}
-              className="rounded-lg border border-violet-200 px-4 py-2 text-violet-600 disabled:opacity-50">
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+              className="rounded-lg border border-violet-200 px-4 py-2 text-violet-600 disabled:opacity-50"
+            >
               Refresh Status
             </button>
           </div>
@@ -155,81 +156,81 @@ const SubmitFeedback = () => {
           )}
 
           <fieldset disabled={submitting}>
-          <div className="grid gap-5 sm:grid-cols-3">
-            <RatingField
-              label="Technical"
-              value={technicalRating}
-              onChange={setTechnicalRating}
-            />
+            <div className="grid gap-5 sm:grid-cols-3">
+              <RatingField
+                label="Technical"
+                value={technicalRating}
+                onChange={setTechnicalRating}
+              />
 
-            <RatingField
-              label="Communication"
-              value={communicationRating}
-              onChange={setCommunicationRating}
-            />
+              <RatingField
+                label="Communication"
+                value={communicationRating}
+                onChange={setCommunicationRating}
+              />
 
-            <RatingField
-              label="Problem Solving"
-              value={problemSolvingRating}
-              onChange={setProblemSolvingRating}
-            />
-          </div>
+              <RatingField
+                label="Problem Solving"
+                value={problemSolvingRating}
+                onChange={setProblemSolvingRating}
+              />
+            </div>
 
-          <div className="mt-7 grid gap-5 sm:grid-cols-2">
-            <TextArea
-              label="Strengths"
-              value={strengths}
-              onChange={setStrengths}
-              placeholder="Candidate strengths..."
-            />
+            <div className="mt-7 grid gap-5 sm:grid-cols-2">
+              <TextArea
+                label="Strengths"
+                value={strengths}
+                onChange={setStrengths}
+                placeholder="Candidate strengths..."
+              />
 
-            <TextArea
-              label="Weaknesses"
-              value={weaknesses}
-              onChange={setWeaknesses}
-              placeholder="Areas for improvement..."
-            />
-          </div>
+              <TextArea
+                label="Weaknesses"
+                value={weaknesses}
+                onChange={setWeaknesses}
+                placeholder="Areas for improvement..."
+              />
+            </div>
 
-          <div className="mt-5">
-            <TextArea
-              label="Comments"
-              value={comments}
-              onChange={setComments}
-              placeholder="Additional interview comments..."
-            />
-          </div>
+            <div className="mt-5">
+              <TextArea
+                label="Comments"
+                value={comments}
+                onChange={setComments}
+                placeholder="Additional interview comments..."
+              />
+            </div>
 
-          <div className="mt-5">
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Recommendation
-            </label>
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Recommendation
+              </label>
 
-            <select
-              value={recommendation}
-              onChange={(event) => setRecommendation(event.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-            >
-              <option value="">Select recommendation</option>
+              <select
+                value={recommendation}
+                onChange={(event) => setRecommendation(event.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+              >
+                <option value="">Select recommendation</option>
 
-              <option value="STRONGLY_RECOMMEND">Strongly Recommend</option>
-              <option value="RECOMMEND">Recommend</option>
-              <option value="NEUTRAL">Neutral</option>
-              <option value="NOT_RECOMMEND">Do Not Recommend</option>
-            </select>
-          </div>
+                <option value="STRONGLY_RECOMMEND">Strongly Recommend</option>
+                <option value="RECOMMEND">Recommend</option>
+                <option value="NEUTRAL">Neutral</option>
+                <option value="NOT_RECOMMEND">Do Not Recommend</option>
+              </select>
+            </div>
 
-          <div className="mt-7 flex justify-end">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:opacity-50"
-            >
-              <Send size={16} />
+            <div className="mt-7 flex justify-end">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:opacity-50"
+              >
+                <Send size={16} />
 
-              {submitting ? "Submitting..." : "Submit Feedback"}
-            </button>
-          </div>
+                {submitting ? "Submitting..." : "Submit Feedback"}
+              </button>
+            </div>
           </fieldset>
         </form>
       </main>

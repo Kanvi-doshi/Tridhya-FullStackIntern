@@ -1,9 +1,15 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import api from "../../services/api";
+import {
+  queryKeys,
+  useRound,
+  useRoundQuestions,
+} from "../../component/hooks/queries";
 
 type QuestionType = "MCQ" | "CODING" | "WRITTEN";
 
@@ -55,48 +61,25 @@ export default function Questions() {
 }
 
 function RoundQuestions({ roundId }: { roundId: string }) {
-  const [round, setRound] = useState<Round | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [reload, setReload] = useState(0);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  // undefined = closed; null = new question; Question = editing.
+  const roundQuery = useRound<Round>(roundId);
+  const questionsQuery = useRoundQuestions<Question>(roundId);
+
+  const round = roundQuery.data ?? null;
+  const questions = questionsQuery.data ?? [];
+  const loading = roundQuery.isLoading || questionsQuery.isLoading;
+  const loadError = roundQuery.error || questionsQuery.error;
+
+  const [actionError, setError] = useState("");
+  const error = actionError || (loadError ? message(loadError) : "");
+
+  const [notice, setNotice] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [editing, setEditing] = useState<Question | null | undefined>(
     undefined,
   );
-  const navigate = useNavigate();
-  useEffect(() => {
-    const controller = new AbortController();
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const config = {
-          signal: controller.signal,
-          timeout: 10000,
-        };
-
-        const [roundResponse, questionResponse] = await Promise.all([
-          api.get(`/interview-round/${roundId}`, config),
-          api.get(`/question/round/${roundId}`, config),
-        ]);
-
-        if (controller.signal.aborted) return;
-
-        setRound(roundResponse.data.round);
-        setQuestions(questionResponse.data.questions || []);
-      } catch (error) {
-        if (!controller.signal.aborted) setError(message(error));
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    };
-    void load();
-    return () => controller.abort();
-  }, [roundId, reload]);
 
   const removeQuestion = async (question: Question) => {
     if (!window.confirm(`Delete Question ${question.orderNumber}?`)) return;
@@ -108,10 +91,10 @@ function RoundQuestions({ roundId }: { roundId: string }) {
 
       await api.delete(`/question/${question.id}`, { timeout: 10000 });
 
-      setQuestions((previous) =>
-        previous.filter((item) => item.id !== question.id),
+      queryClient.setQueryData<Question[]>(
+        queryKeys.roundQuestions(roundId),
+        (old = []) => old.filter((item) => item.id !== question.id),
       );
-
       setNotice("Question deleted.");
     } catch (error) {
       setError(message(error));
@@ -121,10 +104,12 @@ function RoundQuestions({ roundId }: { roundId: string }) {
   };
 
   const saveQuestion = (saved: Question) => {
-    setQuestions((previous) =>
-      [...previous.filter((item) => item.id !== saved.id), saved].sort(
-        (a, b) => a.orderNumber - b.orderNumber,
-      ),
+    queryClient.setQueryData<Question[]>(
+      queryKeys.roundQuestions(roundId),
+      (old = []) =>
+        [...old.filter((item) => item.id !== saved.id), saved].sort(
+          (a, b) => a.orderNumber - b.orderNumber,
+        ),
     );
     setEditing(undefined);
     setNotice("Question saved.");
@@ -183,7 +168,13 @@ function RoundQuestions({ roundId }: { roundId: string }) {
             {error}
             <button
               disabled={editing !== undefined || deleting !== null}
-              onClick={() => setReload((previous) => previous + 1)}
+              onClick={() => {
+                setError("");
+                void Promise.all([
+                  roundQuery.refetch(),
+                  questionsQuery.refetch(),
+                ]);
+              }}
               className="ml-3 underline disabled:opacity-50"
             >
               Reload

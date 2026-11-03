@@ -6,11 +6,12 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useInterviewerAssignments,
+} from "../../component/hooks/queries";
 import NotificationBell from "../../component/NotificationBell";
 
 interface Assignment {
@@ -22,40 +23,14 @@ interface Assignment {
 const InterviewerDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchAssignments = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await api.get("/interview-assignment/my");
-
-        if (cancelled) return;
-        setAssignments(response.data.assignments || []);
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error(error);
-
-        setError(
-          error.response?.data?.message || "Failed to load interview dashboard",
-        );
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchAssignments();
-    return () => {
-      cancelled = true;
-    };
-  }, [revision]);
+  const {
+    data: assignments = [],
+    isLoading: loading,
+    error: loadError,
+  } = useInterviewerAssignments<Assignment>();
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load interview dashboard")
+    : "";
 
   const completed = assignments.filter(
     (assignment) => assignment.status === "COMPLETED",

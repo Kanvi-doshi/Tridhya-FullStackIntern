@@ -1,5 +1,12 @@
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getErrorMessage,
+  queryKeys,
+  useMyApplications,
+} from "../../component/hooks/queries";
+
 import {
   ArrowLeft,
   BriefcaseBusiness,
@@ -7,7 +14,6 @@ import {
   MapPin,
 } from "lucide-react";
 import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
 
 interface Application {
   id: string;
@@ -22,35 +28,19 @@ interface Application {
 
 const MyApplications = () => {
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
+  const {
+    data: applications = [],
+    isLoading: loading,
+    error: loadError,
+  } = useMyApplications<Application>();
+  const [actionError, setActionError] = useState("");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchApplications = async () => {
-      try {
-        const response = await api.get("/application/my");
-
-        if (cancelled) return;
-        setError("");
-        setApplications(response.data.applications || []);
-      } catch (error: any) {
-        if (cancelled) return;
-        setError(
-          error.response?.data?.message || "Failed to load applications",
-        );
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchApplications();
-    return () => { cancelled = true; };
-  }, [revision]);
+  const error =
+    actionError ||
+    (loadError
+      ? getErrorMessage(loadError, "Failed to load applications")
+      : "");
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -186,23 +176,39 @@ const MyApplications = () => {
                       disabled={cancellingId !== null}
                       onClick={async () => {
                         if (cancellingId !== null) return;
-                        if (!window.confirm("Cancel and remove this application?")) return;
+                        if (
+                          !window.confirm("Cancel and remove this application?")
+                        )
+                          return;
                         try {
                           setCancellingId(application.id);
-                          setError("");
+                          setActionError("");
                           await api.delete(`/application/${application.id}`);
-                          setApplications((previous) =>
-                            previous.filter((item) => item.id !== application.id),
+                          queryClient.setQueryData<Application[]>(
+                            queryKeys.myApplications,
+                            (old = []) =>
+                              old.filter((item) => item.id !== application.id),
                           );
-                        } catch (error: any) {
-                          setError(error.response?.data?.message || "Unable to cancel application");
+
+                          queryClient.invalidateQueries({
+                            queryKey: queryKeys.myInterviews,
+                          });
+                        } catch (error: unknown) {
+                          setActionError(
+                            getErrorMessage(
+                              error,
+                              "Unable to cancel application",
+                            ),
+                          );
                         } finally {
                           setCancellingId(null);
                         }
                       }}
                       className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {cancellingId === application.id ? "Cancelling..." : "Cancel Application"}
+                      {cancellingId === application.id
+                        ? "Cancelling..."
+                        : "Cancel Application"}
                     </button>
                   )}
                 </div>

@@ -1,9 +1,10 @@
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/authContext";
 import { Bell, X } from "lucide-react";
-import { HRRealtimeContext } from "../context/RealtimeContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys, useNotifications } from "./hooks/queries";
 
 interface NotificationItem {
   id: string;
@@ -16,22 +17,18 @@ interface NotificationItem {
 
 export default function NotificationBell() {
   const { user } = useAuth();
-  const revision = useContext(HRRealtimeContext);
   const navigate = useNavigate();
-  const [items, setItems] = useState<NotificationItem[]>([]);
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: items = [] } = useNotifications<NotificationItem>(!!user);
 
-  useEffect(() => {
-    if (!user) {
-      setItems([]);
-      return;
-    }
-
-    api
-      .get("/notifications")
-      .then((response) => setItems(response.data.notifications ?? []))
-      .catch(() => setItems([]));
-  }, [user?.id, revision]);
+  const setItems = (
+    update: (current: NotificationItem[]) => NotificationItem[],
+  ) =>
+    queryClient.setQueryData<NotificationItem[]>(
+      queryKeys.notifications,
+      (current = []) => update(current),
+    );
 
   if (!user) return null;
 
@@ -39,16 +36,15 @@ export default function NotificationBell() {
 
   const openNotification = async (item: NotificationItem) => {
     if (!item.isRead) {
-      await api.patch(`/notifications/${item.id}/read`);
-      setItems((current) =>
-        current.map((notification) =>
-          notification.id === item.id
-            ? { ...notification, isRead: true }
-            : notification,
-        ),
-      );
+      try {
+        await api.patch(`/notifications/${item.id}/read`);
+        setItems((current) =>
+          current.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
+        );
+      } catch (error) {
+        console.error("Could not mark notification as read.", error);
+      }
     }
-
     setOpen(false);
     navigate(item.link);
   };
@@ -65,7 +61,7 @@ export default function NotificationBell() {
   const clearNotifications = async () => {
     try {
       await api.delete("/notifications");
-      setItems([]);
+      setItems(() => []);
     } catch (error) {
       console.error("Could not clear notifications.", error);
     }

@@ -10,11 +10,12 @@ import {
   Video,
 } from "lucide-react";
 
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useInterviewerInterviews,
+} from "../../component/hooks/queries";
 
 interface Interview {
   id: string;
@@ -50,51 +51,18 @@ interface Interview {
 
 const InterviewerConductInterviews = () => {
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
 
-  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const {
+    data: interviews = [],
+    isLoading: loading,
+    error: loadError,
+  } = useInterviewerInterviews<Interview>();
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load interviews")
+    : "";
   const [search, setSearch] = useState("");
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // ==========================================
-  // FETCH INTERVIEWS
-  // GET /api/interviewer/interviews
-  // ==========================================
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchInterviews = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        setError("");
-
-        const response = await api.get("/interviewer/interviews");
-
-        if (cancelled) return;
-        setInterviews(
-          response.data.interviews || response.data.assignments || [],
-        );
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error("Failed to load interviews:", error);
-
-        setError(error.response?.data?.message || "Failed to load interviews");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchInterviews();
-    return () => { cancelled = true; };
-  }, [revision]);
-
-  // ==========================================
   // SEARCH
-  // ==========================================
-
   const filteredInterviews = interviews.filter((interview) => {
     const query = search.toLowerCase().trim();
 
@@ -112,10 +80,7 @@ const InterviewerConductInterviews = () => {
     );
   });
 
-  // ==========================================
   // COUNTS
-  // ==========================================
-
   const scheduledCount = interviews.filter(
     (interview) => interview.status === "SCHEDULED",
   ).length;
@@ -123,10 +88,6 @@ const InterviewerConductInterviews = () => {
   const completedCount = interviews.filter(
     (interview) => interview.status === "COMPLETED",
   ).length;
-
-  // ==========================================
-  // LOADING
-  // ==========================================
 
   if (loading) {
     return (

@@ -1,9 +1,14 @@
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, UserCheck } from "lucide-react";
 import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useHRCandidates,
+  useInterviewers,
+  useRefreshData,
+} from "../../component/hooks/queries";
 
 interface Account {
   id: string;
@@ -14,39 +19,28 @@ interface Account {
 
 export default function Interviewers() {
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-  const [interviewers, setInterviewers] = useState<Account[]>([]);
-  const [candidates, setCandidates] = useState<Account[]>([]);
+  const refresh = useRefreshData();
+  const {
+    data: interviewers = [],
+    isLoading: interviewersLoading,
+    error: interviewersError,
+  } = useInterviewers<Account>();
+  const {
+    data: candidates = [],
+    isLoading: candidatesLoading,
+    error: candidatesError,
+  } = useHRCandidates<Account>();
   const [selectedId, setSelectedId] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [actionError, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const [staff, accounts] = await Promise.all([
-          api.get("/hr/interviewers"),
-          api.get("/hr/candidates"),
-        ]);
-        if (!cancelled) {
-          setInterviewers(staff.data.interviewers || []);
-          setCandidates(accounts.data.candidates || []);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) setError("Unable to load accounts. Please retry.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [revision, refreshKey]);
+  const loading = interviewersLoading || candidatesLoading;
+  const loadError = interviewersError || candidatesError;
+  const error =
+    actionError ||
+    (loadError
+      ? getErrorMessage(loadError, "Unable to load accounts. Please retry.")
+      : "");
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -60,9 +54,7 @@ export default function Interviewers() {
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="flex text-2xl font-bold">
-            Interviewer Management
-          </h1>
+          <h1 className="flex text-2xl font-bold">Interviewer Management</h1>
           <p className="mt-2 text-sm text-violet-100">
             Manage interviewer accounts and availability for new bookings.
           </p>
@@ -105,7 +97,7 @@ export default function Interviewers() {
                 role: "INTERVIEWER",
               });
               setSelectedId("");
-              setRefreshKey((value) => value + 1);
+              await Promise.all([refresh.interviewers(), refresh.candidates()]);
             } catch (error) {
               setError(
                 axios.isAxiosError(error)
@@ -162,8 +154,9 @@ export default function Interviewers() {
             <h2 className="font-semibold text-slate-800">Interviewers</h2>
             <button
               type="button"
-              onClick={() => setRefreshKey((value) => value + 1)}
-              className="text-sm font-medium text-violet-600"
+              onClick={() =>
+                void Promise.all([refresh.interviewers(), refresh.candidates()])
+              }
             >
               Refresh
             </button>
@@ -207,7 +200,7 @@ export default function Interviewers() {
                         await api.patch(`/hr/users/${interviewer.id}/status`, {
                           isActive: !interviewer.isActive,
                         });
-                        setRefreshKey((value) => value + 1);
+                        await refresh.interviewers();
                       } catch (error) {
                         setError(
                           axios.isAxiosError(error)

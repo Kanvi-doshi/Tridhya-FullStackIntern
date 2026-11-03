@@ -7,8 +7,8 @@ import {
   Sparkles,
   ArrowLeft,
 } from "lucide-react";
-import api from "../../services/api";
 import { useAuth } from "../../context/authContext";
+import { getErrorMessage, useJobs } from "../../component/hooks/queries";
 
 interface Job {
   id: string;
@@ -25,25 +25,15 @@ const Jobs = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await api.get("/job");
-        setJobs(response.data.jobs || []);
-      } catch (error: any) {
-        setError(error.response?.data?.message || "Failed to load jobs");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJobs();
-  }, []);
+  const {
+    data: jobs = [],
+    isLoading: loading,
+    error: loadError,
+  } = useJobs<Job>();
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load jobs")
+    : "";
 
   const filteredJobs = jobs.filter((job) =>
     job.title.toLowerCase().includes(search.toLowerCase()),

@@ -7,9 +7,16 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getErrorMessage,
+  queryKeys,
+  useJob,
+  useRefreshData,
+} from "../../component/hooks/queries";
 
 interface Job {
   id: string;
@@ -33,37 +40,20 @@ const HRJobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const refresh = useRefreshData();
   const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchJob = async () => {
-      if (!id) {
-        setError("Job ID is missing");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await api.get(`/job/${id}`);
-
-        setJob(response.data.job);
-      } catch (error: any) {
-        console.error("Failed to load job:", error);
-
-        setError(error.response?.data?.message || "Failed to load job");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJob();
-  }, [id]);
+  const {
+    data: job = null,
+    isLoading: loading,
+    error: loadError,
+  } = useJob<Job>(id);
+  const error = !id
+    ? "Job ID is missing"
+    : loadError
+      ? getErrorMessage(loadError, "Failed to load job")
+      : "";
 
   const handleDelete = async () => {
     if (!job) return;
@@ -73,15 +63,19 @@ const HRJobDetails = () => {
     );
 
     if (!confirmed) return;
-
     try {
       setDeleting(true);
-
       await api.delete(`/job/${job.id}`);
-
       navigate("/job", {
         replace: true,
       });
+      queryClient.removeQueries({ queryKey: queryKeys.job(job.id) });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"], exact: true });
+      void Promise.all([
+        refresh.applications(),
+        refresh.rounds(),
+        refresh.analytics(),
+      ]);
     } catch (error: any) {
       console.error("Failed to delete job:", error);
 

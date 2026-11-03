@@ -2,6 +2,7 @@ import { ArrowLeft, BriefcaseBusiness, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useRefreshData } from "../../component/hooks/queries";
 
 interface JobForm {
   title: string;
@@ -14,7 +15,7 @@ interface JobForm {
 
 const CreateJob = () => {
   const navigate = useNavigate();
-
+  const refresh = useRefreshData();
   const [form, setForm] = useState<JobForm>({
     title: "",
     description: "",
@@ -25,9 +26,7 @@ const CreateJob = () => {
   });
 
   const [submitting, setSubmitting] = useState(false);
-
   const [error, setError] = useState("");
-
   const [success, setSuccess] = useState("");
 
   const handleChange = (
@@ -61,6 +60,7 @@ const CreateJob = () => {
         status: form.status,
       });
 
+      await refresh.jobs();
       setSuccess(response.data.message || "Job created successfully");
 
       // After creation go to the new job

@@ -4,10 +4,11 @@ import {
   MessageSquareText,
   Star,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useInterviewerFeedback,
+} from "../../component/hooks/queries";
 
 interface FeedbackItem {
   id: string;
@@ -48,36 +49,14 @@ interface FeedbackItem {
 
 const InterviewerFeedback = () => {
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchFeedback = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await api.get("/interview-feedback/my");
-
-        if (cancelled) return;
-        setFeedback(response.data.feedback || []);
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error("Failed to fetch feedback:", error);
-
-        setError(error.response?.data?.message || "Failed to load feedback");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchFeedback();
-    return () => { cancelled = true; };
-  }, [revision]);
+  const {
+    data: feedback = [],
+    isLoading: loading,
+    error: loadError,
+  } = useInterviewerFeedback<FeedbackItem>();
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load feedback")
+    : "";
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -11,8 +11,11 @@ import {
   Clock3,
   CheckCircle2,
 } from "lucide-react";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+
+import {
+  getErrorMessage,
+  useAllApplications,
+} from "../../component/hooks/queries";
 
 interface Candidate {
   id: string;
@@ -41,36 +44,17 @@ interface Application {
 
 const Candidates = () => {
   const navigate = useNavigate();
-  const hrRevision = useContext(HRRealtimeContext);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const {
+    data: applications = [],
+    isLoading: loading,
+    error: loadError,
+  } = useAllApplications<Application>();
+  const error = loadError
+    ? getErrorMessage(loadError, "Unable to load candidates.")
+    : "";
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchCandidates = async () => {
-      try {
-        const response = await api.get("/application");
-        if (!cancelled) {
-          setApplications(response.data.applications || []);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to refresh candidates.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void fetchCandidates();
-    return () => {
-      cancelled = true;
-    };
-  }, [hrRevision]);
 
   const filteredApplications = applications.filter((application) => {
     const searchValue = search.toLowerCase();

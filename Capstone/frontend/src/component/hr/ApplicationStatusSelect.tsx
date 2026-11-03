@@ -1,6 +1,9 @@
-import { useContext, useEffect, useState } from "react";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import { useMemo } from "react";
+import {
+  useApplicationAssessments,
+  useApplicationFeedback,
+  useJobRounds,
+} from "../../component/hooks/queries";
 
 interface Props {
   applicationId: string;
@@ -42,93 +45,58 @@ export default function ApplicationStatusSelect({
   updating,
   onChange,
 }: Props) {
-  const [eligibility, setEligibility] = useState({
-    key: "",
-    assessmentsPassed: false,
-    feedbackReady: false,
-    error: "",
-  });
-  const hrRevision = useContext(HRRealtimeContext);
-  const key = `${applicationId}:${jobId}:${status}:${hrRevision}`;
   const needsChecks = status === "SHORTLISTED" || status === "INTERVIEWING";
-  const checking = needsChecks && eligibility.key !== key;
+  const roundsQ = useJobRounds<Round>(jobId, needsChecks);
+  const reviewQ = useApplicationAssessments<ReviewRound>(
+    applicationId,
+    needsChecks,
+  );
+  const feedbackQ = useApplicationFeedback<Feedback>(
+    applicationId,
+    needsChecks,
+  );
 
-  useEffect(() => {
-    if (!needsChecks) return;
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const [roundResponse, reviewResponse, feedbackResponse] =
-          await Promise.all([
-            api.get<{ rounds: Round[] }>(`/interview-round/job/${jobId}`),
-            api.get<{ rounds: ReviewRound[] }>(
-              `/application/${applicationId}/assessments`,
-            ),
-            api.get<{ feedback: Feedback[] }>(
-              `/interview-feedback/application/${applicationId}`,
-            ),
-          ]);
-
-        const activeRounds = roundResponse.data.rounds.filter(
-          (round) => round.isActive,
-        );
-        const assessments = activeRounds.filter(
-          (round) => round.type !== "INTERVIEW",
-        );
-        const interviews = activeRounds.filter(
-          (round) => round.type === "INTERVIEW",
-        );
-
-        if (!cancelled) {
-          setEligibility({
-            key,
-            assessmentsPassed:
-              assessments.length === 3 &&
-              assessments.every((round) =>
-                reviewResponse.data.rounds.some(
-                  (review) =>
-                    review.id === round.id &&
-                    review.attempt?.status === "PASSED",
-                ),
-              ),
-            feedbackReady:
-              interviews.length === 1 &&
-              feedbackResponse.data.feedback.some(
-                (feedback) => feedback.assignment.round.id === interviews[0].id,
-              ),
-            error: "",
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setEligibility({
-            key,
-            assessmentsPassed: false,
-            feedbackReady: false,
-            error: "Cannot check eligibility. Reload the page.",
-          });
-        }
-      }
+  const checking =
+    needsChecks &&
+    (roundsQ.isLoading || reviewQ.isLoading || feedbackQ.isLoading);
+  const loadFailed =
+    needsChecks && (roundsQ.isError || reviewQ.isError || feedbackQ.isError);
+  const { assessmentsPassed, feedbackReady } = useMemo(() => {
+    const activeRounds = (roundsQ.data ?? []).filter((r) => r.isActive);
+    const assessments = activeRounds.filter((r) => r.type !== "INTERVIEW");
+    const interviews = activeRounds.filter((r) => r.type === "INTERVIEW");
+    return {
+      assessmentsPassed:
+        assessments.length === 3 &&
+        assessments.every((round) =>
+          (reviewQ.data ?? []).some(
+            (review) =>
+              review.id === round.id && review.attempt?.status === "PASSED",
+          ),
+        ),
+      feedbackReady:
+        interviews.length === 1 &&
+        (feedbackQ.data ?? []).some(
+          (f) => f.assignment.round.id === interviews[0].id,
+        ),
     };
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [applicationId, jobId, status, key, needsChecks]);
+  }, [roundsQ.data, reviewQ.data, feedbackQ.data]);
 
   const allowed =
     status === "APPLIED"
       ? ["SHORTLISTED", "REJECTED"]
-      : status === "SHORTLISTED" && !checking && eligibility.assessmentsPassed
+      : status === "SHORTLISTED" &&
+          !checking &&
+          !loadFailed &&
+          assessmentsPassed
         ? ["INTERVIEWING", "REJECTED"]
-        : status === "INTERVIEWING" && !checking && eligibility.feedbackReady
-          ? ["REJECTED", ...(eligibility.assessmentsPassed ? ["SELECTED"] : [])]
+        : status === "INTERVIEWING" && !checking && !loadFailed && feedbackReady
+          ? ["REJECTED", ...(assessmentsPassed ? ["SELECTED"] : [])]
           : [];
 
+  const eligibilityError = loadFailed
+    ? "Cannot check eligibility. Reload the page."
+    : "";
   return (
     <div>
       <select
@@ -152,11 +120,11 @@ export default function ApplicationStatusSelect({
       <p className="mt-1 max-w-xs text-xs text-slate-500">
         {checking
           ? "Checking eligibility..."
-          : needsChecks && eligibility.error
-            ? eligibility.error
-            : status === "SHORTLISTED" && !eligibility.assessmentsPassed
+          : needsChecks && eligibilityError
+            ? eligibilityError
+            : status === "SHORTLISTED" && !assessmentsPassed
               ? "Wait until all three assessments are passed and evaluated."
-              : status === "INTERVIEWING" && !eligibility.feedbackReady
+              : status === "INTERVIEWING" && !feedbackReady
                 ? "Wait for final interview feedback."
                 : ["SELECTED", "REJECTED"].includes(status)
                   ? "Final decision recorded."

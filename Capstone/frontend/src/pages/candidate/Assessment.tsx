@@ -2,6 +2,8 @@ import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
+import { queryClient } from "../../component/queryClient";
+import { queryKeys } from "../../component/hooks/queries";
 
 interface Question {
   id: string;
@@ -110,6 +112,9 @@ export default function Assessment() {
     (id: string) => {
       activeRef.current = false;
       stopCamera();
+      queryClient.invalidateQueries({ queryKey: ["attempts"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myApplications });
+      queryClient.removeQueries({ queryKey: queryKeys.assessmentResult(id) });
       navigate(`/assessment/${id}/result`, { replace: true });
     },
     [navigate, stopCamera],
@@ -638,6 +643,8 @@ export default function Assessment() {
         {},
         requestOptions,
       );
+
+      queryClient.invalidateQueries({ queryKey: ["attempts"] });
 
       if (data.attempt.status !== "IN_PROGRESS") {
         showResult(data.attempt.id);

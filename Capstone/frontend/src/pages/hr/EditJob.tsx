@@ -2,6 +2,11 @@ import { ArrowLeft, BriefcaseBusiness, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
+import {
+  getErrorMessage,
+  useJob,
+  useRefreshData,
+} from "../../component/hooks/queries";
 
 interface JobForm {
   title: string;
@@ -12,10 +17,12 @@ interface JobForm {
   status: string;
 }
 
+type JobData = JobForm & { id: string };
+
 const EditJob = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const refresh = useRefreshData();
   const [form, setForm] = useState<JobForm>({
     title: "",
     description: "",
@@ -25,45 +32,34 @@ const EditJob = () => {
     status: "OPEN",
   });
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [actionError, setError] = useState("");
+
+  const {
+    data: job,
+    isLoading: loading,
+    error: loadError,
+  } = useJob<JobData>(id);
+
+  const error =
+    actionError ||
+    (!id
+      ? "Job ID is missing"
+      : loadError
+        ? getErrorMessage(loadError, "Failed to load job")
+        : "");
 
   useEffect(() => {
-    const fetchJob = async () => {
-      if (!id) {
-        setError("Job ID is missing");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await api.get(`/job/${id}`);
-
-        const job = response.data.job;
-
-        setForm({
-          title: job.title || "",
-          description: job.description || "",
-          location: job.location || "",
-          experienceRequired: job.experienceRequired || "",
-          skills: job.skills || "",
-          status: job.status || "OPEN",
-        });
-      } catch (error: any) {
-        console.error("Failed to load job:", error);
-
-        setError(error.response?.data?.message || "Failed to load job");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJob();
-  }, [id]);
+    if (!job) return;
+    setForm({
+      title: job.title || "",
+      description: job.description || "",
+      location: job.location || "",
+      experienceRequired: job.experienceRequired || "",
+      skills: job.skills || "",
+      status: job.status || "OPEN",
+    });
+  }, [job?.id]);
 
   const handleChange = (
     event:
@@ -96,6 +92,7 @@ const EditJob = () => {
         skills: form.skills.trim(),
         status: form.status,
       });
+      await refresh.jobs();
 
       navigate(`/job/${id}`, {
         replace: true,

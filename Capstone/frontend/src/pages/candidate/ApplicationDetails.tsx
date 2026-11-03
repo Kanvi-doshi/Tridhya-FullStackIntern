@@ -12,11 +12,17 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
 import AssessmentRounds from "../../component/candidate/AssessmentRounds";
+import {
+  getErrorMessage,
+  queryKeys,
+  useMyApplications,
+  useRefreshData,
+} from "../../component/hooks/queries";
+import { queryClient } from "../../component/queryClient";
 
 interface Application {
   id: string;
@@ -53,12 +59,18 @@ interface Application {
 const CandidateApplicationDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [application, setApplication] = useState<Application | null>(null);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const {
+    data: applications = [],
+    isLoading: loading,
+    error: loadError,
+  } = useMyApplications<Application>({ refetchOnWindowFocus: true });
+  const refresh = useRefreshData();
+  const application = applications.find((item) => item.id === id) ?? null;
+  const error = loadError
+    ? getErrorMessage(loadError, "Failed to load application")
+    : !loading && !application
+      ? "Application not found"
+      : "";
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
 
@@ -68,55 +80,18 @@ const CandidateApplicationDetails = () => {
     try {
       setCancelling(true);
       setCancelError("");
+
       await api.delete(`/application/${application.id}`);
       navigate("/application", { replace: true });
-    } catch (error: any) {
-      setCancelError(error.response?.data?.message || "Unable to cancel application");
+
+      await refresh.applications();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myInterviews });
+    } catch (error: unknown) {
+      setCancelError(getErrorMessage(error, "Unable to cancel application"));
     } finally {
       setCancelling(false);
     }
   };
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchApplication = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await api.get("/application/my");
-        const selectedApplication = response.data.applications.find(
-          (application: Application) => application.id === id,
-        );
-
-        if (cancelled) return;
-        if (!selectedApplication) {
-          setError("Application not found");
-          return;
-        }
-        setApplication(selectedApplication);
-      } catch (error: any) {
-        if (cancelled) return;
-        console.error("Failed to fetch application:", error);
-
-        setError(error.response?.data?.message || "Failed to load application");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    if (!id) return;
-
-    void fetchApplication();
-    const handleFocus = () => {
-      void fetchApplication();
-    };
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [id, revision]);
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -259,25 +234,29 @@ const CandidateApplicationDetails = () => {
             </div>
 
             <div className="flex flex-wrap gap-3">
-            {application.status === "APPLIED" && (
+              {application.status === "APPLIED" && (
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {cancelling ? "Cancelling..." : "Cancel Application"}
+                </button>
+              )}
               <button
-                type="button"
-                onClick={handleCancel}
-                disabled={cancelling}
-                className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => navigate(`/job/${application.job.id}`)}
+                className="rounded-lg border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-600 transition hover:bg-violet-50"
               >
-                {cancelling ? "Cancelling..." : "Cancel Application"}
+                View Job
               </button>
-            )}
-            <button
-              onClick={() => navigate(`/job/${application.job.id}`)}
-              className="rounded-lg border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-600 transition hover:bg-violet-50"
-            >
-              View Job
-            </button>
             </div>
           </div>
-          {cancelError && <p role="alert" className="mt-4 text-sm text-red-600">{cancelError}</p>}
+          {cancelError && (
+            <p role="alert" className="mt-4 text-sm text-red-600">
+              {cancelError}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">

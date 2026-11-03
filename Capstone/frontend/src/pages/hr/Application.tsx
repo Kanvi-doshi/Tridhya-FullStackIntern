@@ -10,11 +10,18 @@ import {
   Clock3,
   CheckCircle2,
 } from "lucide-react";
-import { useContext, useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getErrorMessage,
+  queryKeys,
+  useJobApplications,
+  useJobs,
+  useRefreshData,
+} from "../../component/hooks/queries";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import ApplicationStatusSelect from "../../component/hr/ApplicationStatusSelect";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
 
 interface Job {
   id: string;
@@ -64,77 +71,29 @@ const APPLICATION_STATUSES = [
 
 const HRApplications = () => {
   const navigate = useNavigate();
-  const hrRevision = useContext(HRRealtimeContext);
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const queryClient = useQueryClient();
+  const refresh = useRefreshData();
+  const {
+    data: jobs = [],
+    isLoading: jobsLoading,
+    error: jobsError,
+  } = useJobs<Job>();
   const [selectedJobId, setSelectedJobId] = useState("");
-
-  const [applications, setApplications] = useState<Application[]>([]);
+  const {
+    data: applications = [],
+    isLoading: applicationsLoading,
+    error: applicationsError,
+  } = useJobApplications<Application>(selectedJobId);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-
-  const [jobsLoading, setJobsLoading] = useState(true);
-  const [applicationsLoading, setApplicationsLoading] = useState(false);
-
-  const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setJobsLoading(true);
-        setError("");
-
-        const response = await api.get("/job");
-        const fetchedJobs = response.data.jobs || [];
-
-        setJobs(fetchedJobs);
-        if (fetchedJobs.length > 0) {
-          setSelectedJobId(fetchedJobs[0].id);
-        }
-      } catch (error: any) {
-        console.error("Failed to fetch jobs:", error);
-
-        setError(error.response?.data?.message || "Failed to load jobs");
-      } finally {
-        setJobsLoading(false);
-      }
-    };
-
-    fetchJobs();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setApplications([]);
-      return;
-    }
-    let cancelled = false;
-
-    const fetchApplications = async () => {
-      try {
-        const response = await api.get(`/application/job/${selectedJobId}`);
-
-        if (!cancelled) {
-          setApplications(response.data.applications || []);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to refresh applications.");
-        }
-      } finally {
-        if (!cancelled) setApplicationsLoading(false);
-      }
-    };
-
-    void fetchApplications();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedJobId, hrRevision]);
-
+  const error = jobsError
+    ? getErrorMessage(jobsError, "Failed to load jobs")
+    : applicationsError
+      ? getErrorMessage(applicationsError, "Unable to load applications")
+      : "";
   const handleStatusChange = async (applicationId: string, status: string) => {
     try {
       setUpdatingId(applicationId);
@@ -142,19 +101,17 @@ const HRApplications = () => {
         status,
       });
 
-      setApplications((previousApplications) =>
-        previousApplications.map((application) =>
-          application.id === applicationId
-            ? {
-                ...application,
-                status: response.data.application?.status || status,
-              }
-            : application,
-        ),
+      queryClient.setQueryData<Application[]>(
+        queryKeys.jobApplications(selectedJobId),
+        (old = []) =>
+          old.map((item) =>
+            item.id === applicationId
+              ? { ...item, status: response.data.application?.status || status }
+              : item,
+          ),
       );
+      void refresh.applications();
     } catch (error: any) {
-      console.error("Failed to update application:", error);
-
       alert(
         error.response?.data?.message || "Failed to update application status",
       );
@@ -303,8 +260,6 @@ const HRApplications = () => {
             <select
               value={selectedJobId}
               onChange={(event) => {
-                setApplications([]);
-                setApplicationsLoading(true);
                 setSelectedJobId(event.target.value);
               }}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100 sm:max-w-md"

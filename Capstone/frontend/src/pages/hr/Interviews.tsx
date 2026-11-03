@@ -7,15 +7,12 @@ import {
   Video,
 } from "lucide-react";
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
 import {
   createInterviewAssignment,
   createInterviewRound,
   deleteInterviewRound,
-  getInterviewAssignments,
-  getInterviewRounds,
   updateInterviewRound,
   updateInterviewAssignment,
 } from "../../services/interviewService";
@@ -27,7 +24,15 @@ import ScheduledInterviews, {
 } from "../../component/hr/Interview/ScheduledInterview";
 import RoundForm from "../../component/hr/Interview/roundForm";
 import ScheduleInterviewForm from "../../component/hr/Interview/ScheduleInterviewForm";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import {
+  getErrorMessage,
+  useHRAssignments,
+  useHRRounds,
+  useInterviewers,
+  useJobApplications,
+  useJobs,
+  useRefreshData,
+} from "../../component/hooks/queries";
 
 interface Job {
   id: string;
@@ -55,16 +60,35 @@ interface Interviewer {
 
 const HRInterviews = () => {
   const navigate = useNavigate();
-  const hrRevision = useContext(HRRealtimeContext);
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const refresh = useRefreshData();
+  const {
+    data: jobs = [],
+    isLoading: jobsLoading,
+    error: jobsError,
+  } = useJobs<Job>();
   const [selectedJobId, setSelectedJobId] = useState("");
-  const [rounds, setRounds] = useState<InterviewRound[]>([]);
-  const [assignments, setAssignments] = useState<InterviewAssignment[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [interviewers, setInterviewers] = useState<Interviewer[]>([]);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: rounds = [], error: roundsError } = useHRRounds(selectedJobId);
+  const { data: applications = [], error: applicationsError } =
+    useJobApplications<Application>(selectedJobId);
+
+  const {
+    data: assignments = [],
+    isLoading: assignmentsLoading,
+    error: assignmentsError,
+  } = useHRAssignments();
+  const { data: interviewers = [] } = useInterviewers<Interviewer>();
+
+  const [actionError, setError] = useState("");
+  const loadError =
+    jobsError || assignmentsError || roundsError || applicationsError;
+  const error =
+    actionError ||
+    (loadError
+      ? getErrorMessage(loadError, "Failed to load interview management")
+      : "");
+  const loading = assignmentsLoading || jobsLoading;
+
   const [showRoundForm, setShowRoundForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null);
@@ -75,130 +99,8 @@ const HRInterviews = () => {
 
   // INITIAL DATA
   useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const [jobsResponse, assignmentsData] = await Promise.all([
-          api.get("/job"),
-          getInterviewAssignments(),
-        ]);
-
-        const fetchedJobs = jobsResponse.data.jobs || [];
-        setJobs(fetchedJobs);
-        setAssignments(assignmentsData);
-        if (fetchedJobs.length > 0) {
-          setSelectedJobId(fetchedJobs[0].id);
-        }
-      } catch (error: any) {
-        console.error("Failed to load interviews:", error);
-        setError(
-          error.response?.data?.message ||
-            "Failed to load interview management",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadInitialData();
-  }, []);
-
-  // LOAD SELECTED JOB
-  useEffect(() => {
-    if (!selectedJobId) {
-      setRounds([]);
-      setApplications([]);
-      return;
-    }
-    let cancelled = false;
-
-    const loadJobData = async () => {
-      try {
-        const [roundsData, applicationsResponse] = await Promise.all([
-          getInterviewRounds(selectedJobId),
-
-          api.get(`/application/job/${selectedJobId}`),
-        ]);
-
-        if (!cancelled) {
-          setRounds(roundsData);
-          setApplications(applicationsResponse.data.applications || []);
-          setError("");
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to load candidate details.");
-        }
-      }
-    };
-
-    void loadJobData();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedJobId, hrRevision]);
-
-  // LOAD INTERVIEWERS
-  useEffect(() => {
-    let cancelled = false;
-    const loadInterviewers = async () => {
-      try {
-        const response = await api.get("/hr/interviewers");
-        if (!cancelled) {
-          setInterviewers(
-            response.data.interviewers || response.data.users || [],
-          );
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to refresh interviewers.");
-        }
-      }
-    };
-
-    void loadInterviewers();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [hrRevision]);
-
-  useEffect(() => {
-    if (hrRevision === 0) return;
-    let cancelled = false;
-
-    const loadAssignments = async () => {
-      try {
-        const data = await getInterviewAssignments();
-
-        if (!cancelled) {
-          setAssignments(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Unable to refresh interviews. Reload the page.");
-        }
-      }
-    };
-    void loadAssignments();
-    return () => {
-      cancelled = true;
-    };
-  }, [hrRevision]);
-
-  // REFRESH ROUNDS
-  const refreshRounds = async () => {
-    if (!selectedJobId) return;
-    const data = await getInterviewRounds(selectedJobId);
-    setRounds(data);
-  };
-
-  // REFRESH ASSIGNMENTS
-  const refreshAssignments = async () => {
-    const data = await getInterviewAssignments();
-    setAssignments(data);
-  };
+    if (!selectedJobId && jobs.length > 0) setSelectedJobId(jobs[0].id);
+  }, [jobs, selectedJobId]);
 
   // SAVE ROUND
   const handleSaveRound = async (data: {
@@ -216,25 +118,19 @@ const HRInterviews = () => {
     } else {
       await createInterviewRound(selectedJobId, data);
     }
-
     setEditingRound(null);
-    try {
-      await refreshRounds();
-    } catch {
-      setError("Round saved, but the list could not refresh. Reload the page.");
-    }
+    await refresh.rounds();
   };
 
   const handleDeleteRound = async (roundId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this interview round?",
-    );
+    if (
+      !window.confirm("Are you sure you want to delete this interview round?")
+    )
+      return;
 
-    if (!confirmed) return;
     try {
       await deleteInterviewRound(roundId);
-
-      await refreshRounds();
+      await Promise.all([refresh.rounds(), refresh.interviews(), refresh.questions()]); // assignments may reference the round
     } catch (error: any) {
       alert(
         error.response?.data?.message || "Failed to delete interview round",
@@ -260,11 +156,7 @@ const HRInterviews = () => {
       await updateInterviewAssignment(id, {
         status: "CANCELLED",
       });
-      try {
-        await refreshAssignments();
-      } catch {
-        setError("Interview cancelled. Reload the page to refresh the list.");
-      }
+      await refresh.interviews();
     } catch (error: unknown) {
       setError(
         axios.isAxiosError<{ message?: string }>(error)
@@ -292,14 +184,10 @@ const HRInterviews = () => {
     } else {
       await createInterviewAssignment(applicationId, roundId, data);
     }
-    try {
-      await refreshAssignments();
-    } catch {
-      setError("Interview saved. Reload the page to refresh the list.");
-    }
+    await refresh.interviews();
   };
 
-  if (loading) {
+  if (loading || jobsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">

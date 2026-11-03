@@ -9,10 +9,8 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
-import { HRRealtimeContext } from "../../context/RealtimeContext";
+import { useMyInterviews } from "../../component/hooks/queries";
 
 interface Interview {
   id: string;
@@ -45,29 +43,13 @@ interface Interview {
 
 const CanMyInterviews = () => {
   const navigate = useNavigate();
-  const revision = useContext(HRRealtimeContext);
-
-  const [interviews, setInterviews] = useState<Interview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchInterviews = async () => {
-      try {
-        setError("");
-        const response = await api.get("/interview-assignment/candidate/my");
-        if (!cancelled) setInterviews(response.data.assignments || []);
-      } catch {
-        if (!cancelled) setError("Failed to load interviews.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    void fetchInterviews();
-    return () => { cancelled = true; };
-  }, [revision]);
-
+ const {
+   data: interviews = [],
+   isLoading: loading,
+   error: loadError,
+ } = useMyInterviews<Interview>();
+  const error = loadError ? "Failed to load interviews." : "";
+  
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "COMPLETED":
