@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, BriefcaseBusiness, MapPin, Sparkles } from "lucide-react";
-import api from "../../services/api";
 import { useAuth } from "../../context/authContext";
 import {
   getErrorMessage,
